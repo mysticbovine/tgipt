@@ -1,0 +1,50 @@
+<?php
+
+/**
+ * @file
+ * Install, update, and uninstall functions for the uc_canadapost_rest module.
+ *
+ * @author Tim Rohaly.    <http://drupal.org/user/202830>
+ */
+
+
+/**
+ * Implements hook_uninstall().
+ */
+function uc_canadapost_rest_uninstall() {
+  // Remove all module variables from the database.
+  db_delete('variable')
+    ->condition('name', db_like('uc_canadapost_rest_') . '%', 'LIKE')
+    ->execute();
+  cache_clear_all('variables', 'cache_bootstrap');
+}
+
+/**
+ * Implements hook_update_N().
+ *
+ * Renames variables while preserving previous setting values.
+ */
+function uc_canadapost_rest_update_6100() {
+  $ret = array();
+
+  variable_set('uc_canadapost_rest_rate_markup',
+               variable_get('uc_canadapost_rest_markup', ''));
+  variable_set('uc_canadapost_rest_rate_markup_type',
+               variable_get('uc_canadapost_rest_markup_type', ''));
+
+  return $ret;
+}
+
+/**
+ * Implements hook_update_N().
+ *
+ * Removes old variables that were missed in the previous hook_update().
+ */
+function uc_canadapost_rest_update_6101() {
+  $ret = array();
+
+  variable_del('uc_canadapost_rest_markup');
+  variable_del('uc_canadapost_rest_markup_type');
+
+  return $ret;
+}

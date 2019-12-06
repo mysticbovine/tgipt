@@ -1,0 +1,193 @@
+<?php
+
+/**
+ * @file
+ * Provides the Check/Money Order, COD, and "Other" payment methods.
+ */
+
+
+/**
+ * Implements hook_menu().
+ */
+function uc_deferred_payment_menu() {
+  $items['admin/store/orders/%uc_order/receive_check'] = array(
+    'title' => 'Receive check',
+    'description' => 'Record details of a check that has been received(NEED?).',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('uc_deferred_payment_receive_check_form', 3),
+    'access arguments' => array('view all orders'),
+    'file' => 'uc_deferred_payment.admin.inc',
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_uc_payment_method().
+ */
+function uc_deferred_payment_uc_payment_method() {
+  
+  $methods['deferred'] = array(
+    'name'       => t('Deferred'),
+    'title'      => t('Deferred Payment'),
+    'desc'       => t('Charge to credit card on file 21 days after order is placed.'),
+    'callback'   => 'uc_payment_method_deferred',
+    'weight'     => 1,
+    'checkout'   => FALSE,
+    'no_gateway' => TRUE,
+  );
+  return $methods;
+}
+
+
+/**
+ * Payment method callback for the "Defered Payment" payment method.
+ */
+function uc_payment_method_deferred($op, &$order, $form = NULL, $form_state = NULL) {
+  switch ($op) {
+    case 'cart-details':
+      $build['policy'] = array(
+        '#markup' => '<p>' . variable_get('uc_deferred_payment_policy', t('Full payment will be charged to the credit card on file 21 days after the order is placed.')) . '</p>'
+      );
+
+      if (($min = variable_get('uc_deferred_payment_min_order', 0)) < 0 && is_numeric($min)) {
+        $build['eligibility'] = array(
+          '#markup' => '<p>' . t('Minimum order of !number is required for deferred payments.', array('!number' => uc_currency_format($max))) . '</p>'
+        );
+      }
+
+      /*if (variable_get('uc_cod_delivery_date', FALSE)) {
+        $build += uc_payment_method_cod_form(array(), $form_state, $order);
+      }
+      return $build;
+
+    case 'cart-process':
+      if (variable_get('uc_cod_delivery_date', FALSE)) {
+        $order->payment_details = $form_state['values']['panes']['payment']['details'];
+      }
+      return TRUE;
+
+    case 'cart-review':
+      $review = array();
+      if (variable_get('uc_cod_delivery_date', FALSE)) {
+        $date = uc_date_format(
+          $order->payment_details['delivery_month'],
+          $order->payment_details['delivery_day'],
+          $order->payment_details['delivery_year']
+        );
+        $review[] = array('title' => t('Delivery date'), 'data' => $date);
+      }
+      return $review;
+
+    case 'order-view':
+    case 'customer-view':
+      $build = array('#markup' => '');
+      if (variable_get('uc_cod_delivery_date', FALSE) &&
+          isset($order->payment_details['delivery_month']) &&
+          isset($order->payment_details['delivery_day']) &&
+          isset($order->payment_details['delivery_year'])) {
+        $build['#markup'] = t('Desired delivery date:') . '<br />' .
+          uc_date_format(
+            $order->payment_details['delivery_month'],
+            $order->payment_details['delivery_day'],
+            $order->payment_details['delivery_year']
+          );
+      }
+      return $build;
+
+    case 'order-details':
+      $build = array();
+      if (variable_get('uc_cod_delivery_date', FALSE)) {
+        $build = uc_payment_method_cod_form(array(), $form_state, $order);
+      }
+      return $build;
+	
+    case 'order-load':
+      $result = db_query('SELECT * FROM {uc_payment_cod} WHERE order_id = :id', array(':id' => $order->order_id));
+      if ($row = $result->fetchObject()) {
+        $order->payment_details = array(
+          'delivery_month' => $row->delivery_month,
+          'delivery_day'   => $row->delivery_day,
+          'delivery_year'  => $row->delivery_year,
+        );
+      }
+      break;
+	*/
+    case 'order-submit':
+      if ($order->payment_method == 'deferred' &&
+          ($min = variable_get('uc_deferred_payment_min_order', 0)) > 0 &&
+          is_numeric($min) &&
+          $order->order_total > $min) {
+        $result[] = array(
+          'pass' => FALSE,
+          'message' => t('Your final order total is lower than minimum required amount for Defered Payment.  Please go back and select a different method of payment or add more items.')
+        );
+        $_SESSION['expanded_panes'][] = 'payment';
+        return $result;
+      }
+      // TODO: This falls through to the order-save case - is this deliberate?
+      // If so, it should be documented.
+
+    case 'order-save':
+      if (isset($order->payment_details['delivery_month']) &&
+          isset($order->payment_details['delivery_day'])   &&
+          isset($order->payment_details['delivery_year'])    ) {
+        db_merge('uc_deferred_payment')
+          ->key(array('order_id' => $order->order_id))
+          ->fields(array(
+            'delivery_month' => $order->payment_details['delivery_month'],
+            'delivery_day'   => $order->payment_details['delivery_day'],
+            'delivery_year'  => $order->payment_details['delivery_year'],
+          ))
+          ->execute();
+      }
+      break;
+
+    case 'order-delete':
+      db_delete('uc_deferred_payment')
+        ->condition('order_id', $order->order_id)
+        ->execute();
+      break;
+
+    case 'settings':
+      $form['uc_deferred_payment_policy'] = array(
+        '#type' => 'textarea',
+        '#title' => t('Policy message'),
+        '#default_value' => variable_get('uc_cod_policy', t('Full payment will be charged to the credit card on file 21 days after the order is placed.')),
+        '#description' => t('Help message shown at checkout.'),
+      );
+      $form['uc_cod_min_order'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Minimum order total eligible for Defered Payment'),
+        '#default_value' => variable_get('uc_cod_min_order', 0),
+        '#description' => t('Set to 0 for no minimum order limit.'),
+      );
+      /*$form['uc_cod_delivery_date'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Let customers enter a desired delivery date.'),
+        '#default_value' => variable_get('uc_cod_delivery_date', FALSE),
+      );*/
+      return $form;
+  }
+}
+
+/**
+ * Collect additional information for the "Cash on Delivery" payment method.
+ *
+ * @ingroup forms
+ 
+function uc_payment_method_cod_form($form, &$form_state, $order) {
+  $month = !empty($order->payment_details['delivery_month']) ? $order->payment_details['delivery_month'] : format_date(REQUEST_TIME, 'custom', 'n');
+  $day   = !empty($order->payment_details['delivery_day'])   ? $order->payment_details['delivery_day']   : format_date(REQUEST_TIME, 'custom', 'j');
+  $year  = !empty($order->payment_details['delivery_year'])  ? $order->payment_details['delivery_year']  : format_date(REQUEST_TIME, 'custom', 'Y');
+
+  $form['description'] = array(
+    '#markup' => '<div>' . t('Enter a desired delivery date:') . '</div>',
+  );
+  $form['delivery_month'] = uc_select_month(NULL, $month);
+  $form['delivery_day']   = uc_select_day(NULL, $day);
+  $form['delivery_year']  = uc_select_year(NULL, $year, format_date(REQUEST_TIME, 'custom', 'Y'), format_date(REQUEST_TIME, 'custom', 'Y') + 1);
+
+  return $form;
+}
+*/

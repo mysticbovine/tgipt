@@ -1,0 +1,31 @@
+<?php
+/**
+ * @file
+ * Install, update and uninstall functions for uc_attribute_per_role.
+ */
+
+
+/**
+ * Implementation of hook_schema().
+ */
+function uc_attribute_per_role_schema() {
+  $schema['uc_attribute_per_role'] = array(
+    'description' => 'Tracks which attributes should be hidden for a given role.',
+    'fields' => array(
+      'role_id' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+        'default' => 0,
+        'description' => 'The role ID for which to hide attributes for.',
+      ),
+      'attribute_ids' => array(
+        'type' => 'text',
+        'serialize' => TRUE,
+        'description' => 'A serialized array of IDs of attributes to be hidden.',
+      ),
+    ),
+    'primary key' => array('role_id'),
+  );
+  return $schema;
+}

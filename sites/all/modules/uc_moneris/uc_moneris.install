@@ -1,0 +1,36 @@
+<?php
+
+
+/**
+ * @file
+ * Install/uninstall hooks for the Moneris.com payment gateway.
+ */
+
+
+/**
+ * Implementation of hook_requirements().
+ */
+function uc_moneris_requirements($phase) {
+  $t = get_t();
+
+  $has_curl = function_exists('curl_init');
+  $requirements['uc_moneris_curl'] = array(
+    'title' => $t('cURL'),
+    'value' => $has_curl ? $t('Enabled') : $t('Not found'),
+  );
+  if (!$has_curl) {
+    $requirements['uc_moneris_curl']['severity'] = REQUIREMENT_ERROR;
+    $requirements['uc_moneris_curl']['description'] = $t("uc_moneris requires the PHP <a href='!curl_url'>cURL</a> library.", array('!curl_url' => 'http://php.net/manual/en/curl.setup.php'));
+  }
+
+  return $requirements;
+}
+
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function uc_moneris_uninstall() {
+  // Delete related variables all at once.
+  db_query("DELETE FROM {variable} WHERE name LIKE 'uc_moneris_%%'");
+}

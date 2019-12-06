@@ -1,0 +1,53 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the uc_net_days module.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function uc_net_days_pack_schema() {
+  $schema = array();
+
+  $schema['uc_net_days'] = array(
+    'description' => 'Stores net days payment information.',
+    'fields' => array(
+      'order_id' => array(
+        'description' => 'The {uc_orders}.order_id.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('order_id'),
+    'foreign keys' => array(
+      'uc_orders' => array(
+        'table' => 'uc_orders',
+        'columns' => array('order_id' => 'order_id'),
+      ),
+    ),
+  );
+  return $schema;
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function uc_net_days_uninstall() {
+  db_delete('variable')
+    ->condition(db_or()
+      ->condition('name', 'uc_check_%', 'LIKE')
+      ->condition('name', 'uc_cod_%', 'LIKE')
+    )
+    ->execute();
+}
+
+/**
+ * Implements hook_update_last_removed().
+ */
+function uc_net_days_update_last_removed() {
+  return 6000;
+}

@@ -1,0 +1,31 @@
+<?php
+
+ /**
+ * Implements hook_field_attach_view_alter().
+ *
+ * Hide label of display suite fields if field content is empty.
+ */
+function tgipt_field_attach_view_alter(&$output, $context) {
+
+  foreach ($output as $field_name => $field) {
+    if (!empty($field['#label_display'])) {
+      if(isset($field[0]['#markup']) && empty($field[0]['#markup']) && ($field[0]['#markup'] !== 0)) {
+        $output[$field_name]['#label_display'] = 'hidden';
+      }
+    }
+  }
+ }
+ /**
+ * Implements uc_followup_form().
+ *
+ * Add a copy of followup message to admin.
+ */
+  function uc_followup_form($form, &$form_state, $followup = NULL) {
+	 $form['message']['copy'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Copy'),
+		'#default_value' => isset($edit['copy']) ? $edit['copy'] : NULL,
+		'#description' => t('The "Copy" e-mail address. Example: <em>John Smith &lt;john@smith.com&gt;</em>. If blank, no copy will be sent.'),
+	  );
+    return $form;
+  }

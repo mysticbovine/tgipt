@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the Retailer Map feature.
+ */
+
+include_once 'retailer_map.features.inc';

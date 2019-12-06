@@ -1,0 +1,49 @@
+diff --git a/uc_discounts/uc_discounts.admin.inc b/uc_discounts/uc_discounts.admin.inc
+index 8067cff..79cd3f6 100644
+--- a/uc_discounts/uc_discounts.admin.inc
++++ b/uc_discounts/uc_discounts.admin.inc
+@@ -1311,9 +1311,9 @@ function uc_discounts_admin_report_discount($discount_id) {
+                             SUM(du.times_applied) total_times_applied, SUM(du.amount) total_amount, SUM(o.order_total) total_revenue
+                           FROM {uc_discounts} d
+                           LEFT JOIN {uc_discounts_uses} du ON d.discount_id=du.discount_id
+-                          LEFT JOIN {uc_orders} o ON du.order_id=o.order_id AND o.order_status = "completed" AND o.order_total > 0
++                          LEFT JOIN {uc_orders} o ON du.order_id=o.order_id AND o.order_status = :o_order_status AND o.order_total > 0
+                           WHERE d.discount_id = :d_discount_id
+-                          GROUP BY d.discount_id', array(':d_discount_id' => $discount_id))->fetchObject();
++                          GROUP BY d.discount_id', array(':o_order_status' => 'completed', ':d_discount_id' => $discount_id))->fetchObject();
+   $total_use_count = (is_numeric($discount->total_use_count)) ? $discount->total_use_count : 0;
+   $total_times_applied = (is_numeric($discount->total_times_applied)) ? $discount->total_times_applied : 0;
+   $discounts[] = array(
+@@ -1385,7 +1385,7 @@ function uc_discounts_admin_report_discount($discount_id) {
+       'data' => array(
+         $user_description,
+         $use->order_id,
+-        (!empty($use->code)) ? $use->code : '<' . t('no code') . '>',
++        (!empty($use->code)) ? $use->code : t('&lt; no code &gt;'),
+         $use->times_applied,
+         uc_currency_format($use->amount),
+         date('Y-m-d H:i:s', $use->insert_timestamp),
+@@ -1396,8 +1396,8 @@ function uc_discounts_admin_report_discount($discount_id) {
+   if (empty($rows)) {
+     $rows[] = array(
+       'data' => array(
+-        'data' => t('No discount data available.'),
+-        'colspan' => 11,
++        t('No discount data available.'),
++        array('colspan' => 11),
+       ),
+     );
+   }
+diff --git a/uc_discounts/uc_discounts.module b/uc_discounts/uc_discounts.module
+index 5cf754f..06408ae 100644
+--- a/uc_discounts/uc_discounts.module
++++ b/uc_discounts/uc_discounts.module
+@@ -219,7 +219,7 @@ function uc_discounts_menu() {
+   $items['admin/reports/uc_discounts/discount/%'] = array(
+     'title' => 'Ubercart discount usage data',
+     'page callback' => 'uc_discounts_admin_report_discount',
+-    'page arguments' => array('uc_discounts_admin_report_discount', 4),
++    'page arguments' => array(4),
+     'access arguments' => array('access site reports'),
+     'type' => MENU_CALLBACK,
+     'file' => 'uc_discounts.admin.inc',

@@ -1,0 +1,1 @@
+[04-Mar-2017 07:47:07 UTC] PHP Fatal error:  Call to undefined function drupal_get_path() in /home/tgipt1130/public_html/sites/all/themes/bootstrap/includes/common.inc on line 295

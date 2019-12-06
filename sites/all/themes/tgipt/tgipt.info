@@ -1,0 +1,37 @@
+name = The Granville Island Pet Treatery (LESS)
+description = Template uses Bootstrap 3 framework.
+core = 7.x
+base theme = bootstrap
+
+
+;;;;;;;;;;;;;;;;;;;;;
+;; Regions
+;;;;;;;;;;;;;;;;;;;;;
+
+regions[navigation]     = 'Navigation'
+regions[header]         = 'Top Bar'
+regions[highlighted]    = 'Highlighted'
+regions[help]           = 'Help'
+regions[content]        = 'Content'
+regions[sidebar_first]  = 'Primary'
+regions[sidebar_second] = 'Secondary'
+regions[abovefooter]    = 'Above Footer'
+regions[abovefooter1]   = 'Above Footer Column 1'
+regions[abovefooter2]   = 'Above Footer Column 2'
+regions[abovefooter3]   = 'Above Footer Column 3'
+regions[footer]         = 'Footer'
+regions[page_top]       = 'Page top'
+regions[page_bottom]    = 'Page bottom'
+
+
+;;;;;;;;;;;;;;;;;;;;;
+;; Stylesheets
+;;;;;;;;;;;;;;;;;;;;;
+stylesheets[all][] = css/style.css
+
+
+;;;;;;;;;;;;;;;;;;;;;
+;; Scripts
+;;;;;;;;;;;;;;;;;;;;;
+scripts[] = js/jquery.mixitup.min.js
+scripts[] = js/script.js

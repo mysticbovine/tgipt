@@ -1,0 +1,158 @@
+<?php
+/**
+ * @file
+ * Hook implementations and CRUD functions for uc_attribute_per_role.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function uc_attribute_per_role_menu() {
+	$items['admin/store/settings/attributes_per_role'] = array(
+    'title' => 'Attributes Per Role Definitions',
+    'page callback' => 'uc_attribute_per_role_list',
+    'access arguments' => array('administer attributes per role'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'uc_attribute_per_role.admin.inc',
+	);
+	$items['admin/store/settings/attributes_per_role/list'] = array(
+    'title' => 'List Definitions',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => -10,
+	);
+	$items['admin/store/settings/attributes_per_role/add'] = array(
+    'title' => 'Add Definition',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('uc_attribute_per_role_edit'),
+    'access arguments' => array('administer attributes per role'),
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'uc_attribute_per_role.admin.inc',
+    'weight' => -9,
+	);
+	$items['admin/store/settings/attributes_per_role/%/edit'] = array(
+    'title' => 'Edit Attributes Hidden for Role',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('uc_attribute_per_role_edit', 4),
+    'access arguments' => array('administer attributes per role'),
+    'type' => MENU_CALLBACK,
+    'file' => 'uc_attribute_per_role.admin.inc',
+	);
+	$items['admin/store/settings/attributes_per_role/%/reset'] = array(
+    'title' => 'Restore attribute visibility to defaults',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('uc_attribute_per_role_reset_confirm', 4),
+    'access arguments' => array('administer attributes per role'),
+    'type' => MENU_CALLBACK,
+    'file' => 'uc_attribute_per_role.admin.inc',
+	);
+	return $items;
+}
+
+/**
+ * Implements hook_perm().
+ */
+function uc_attribute_per_role_permission() {
+	return array(
+    'administer attributes per role' => array(
+        'title' => 'administer attributes per role',
+        'description' => t('Allow administrator to set role specific attribute')
+	)
+	);
+}
+
+
+/**
+ * Implements hook_form_alter().
+ */
+function uc_attribute_per_role_form_alter(&$form, &$form_state, $form_id) {
+	global $user;
+
+	// Do not attempt to modify the definitions form
+	if ($form_id == 'uc_attribute_per_role_edit') {
+		return;
+	}
+
+	// If the attributes are set, load the definition for each role and unset any
+	//attributes that should be hidden for users of that role. We need to operate
+	// on all forms to ensure we catch the product cart forms as well as any Views
+	if (isset($form['attributes'])) {
+		foreach ($user->roles as $role_id => $role_name) {
+			
+			$definition = uc_attribute_per_role_definition_load($role_id);
+			if ($definition) {
+				foreach ($definition['attribute_ids'] as $attribute_id) {
+					unset($form['attributes'][$attribute_id]);
+				}
+			}
+		}
+	}
+}
+
+/**
+ * Returns an array of role IDs for each role that has a display definition.
+ */
+function uc_attribute_per_role_get_roles_defined() {
+	$defined = array();
+
+	$query = db_select('uc_attribute_per_role', 'ur')->fields('ur', array('role_id'))->execute();
+
+	while ($row = $query->fetchObject()) {
+		$defined[] = $row->role_id;
+	}
+	return $defined;
+}
+
+/**
+ * Returns a definition array structure as if it was retrieved from the
+ * database, populating it with dummy values. Use this function to create the
+ * initial definition array structure before submitting it to the database to
+ * ensure all values are set to their defaults if they are not populated by the
+ * function saving the new entry.
+ */
+function uc_attribute_per_role_definition_new() {
+	return array(
+    'role_id' => -1,
+    'attribute_ids' => array(),
+	);
+}
+
+/**
+ * Retrieves definition for role $role_id from the database and returns it as an
+ * assoicative array, or FALSE if the definition for $role_id was not found.
+ */
+function uc_attribute_per_role_definition_load($role_id) {
+	$definition = db_select('uc_attribute_per_role', 'ur')->fields('ur')->condition('ur.role_id', $role_id, '=')->execute()->fetchAssoc();
+	if ($definition === FALSE) {
+		return FALSE;
+	}
+	$definition['attribute_ids'] = unserialize($definition['attribute_ids']);
+	return $definition;
+}
+
+/**
+ * Save the definition array structure supplied to the database. The record will
+ * be updated if it exists in the database, or inserted if it does not.
+ */
+function uc_attribute_per_role_definition_save($definition) {
+	// Verify that the ID was properly set
+	$roles = user_roles();
+	if (!in_array($definition['role_id'], array_keys($roles))) {
+		return FALSE;
+	}
+
+	if (uc_attribute_per_role_definition_load($definition['role_id']) === FALSE) {
+		drupal_write_record('uc_attribute_per_role', $definition);
+	}
+	else {
+		drupal_write_record('uc_attribute_per_role', $definition, 'role_id');
+	}
+}
+
+/**
+ * Delete the definition for $role_id from the database. The number of affected
+ * rows is returned (although this should always be 1).
+ */
+function uc_attribute_per_role_definition_delete($role_id) {
+	$num_deleted = db_delete('uc_attribute_per_role')->condition('role_id', $role_id, '=')->execute();	
+	return $num_deleted;
+}

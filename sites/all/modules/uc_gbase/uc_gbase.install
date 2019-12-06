@@ -1,0 +1,134 @@
+<?php
+
+/**
+ * @file
+ *
+ * Contains install and update functions for Ubercart Google Base Integration
+ */
+
+/**
+ * Implements hook_requirements().
+ */
+function uc_gbase_requirements($phase) {
+
+  $requirements = array();
+
+  $t = get_t();
+
+  if (!function_exists('simplexml_load_string')) {
+    $requirements['simplexml'] = array(
+        'title' => $t('SimpleXML'),
+        'value' => $t('Not found'),
+        'severity' => REQUIREMENT_ERROR,
+        'description' => $t('The SimpleXML extension for PHP required by the Ubercart Google Base Integration module is not enabled. See <a href="!url">this page</a> for more information.', array('!url' => url('http://us.php.net/manual/en/intro.simplexml.php'))),
+    );
+  }
+
+
+  return $requirements;
+}
+
+/**
+ * Implements hook_schema().
+ */
+function uc_gbase_schema() {
+  $schema = array();
+  $schema['uc_gbase'] = array(
+      'description' => t('Stores the data for products submitted to Google Base.'),
+      'fields' => array(
+          'nid' => array(
+              'type' => 'int',
+              'unsigned' => TRUE,
+              'not null' => TRUE,
+              'description' => t('Drupal node ID.'),
+          ),
+          'gid' => array(
+              'type' => 'varchar',
+              'length' => '25',
+              'not null' => TRUE,
+              'description' => t('The id assigned by Google Base.'),
+          ),
+          'submit_type' => array(
+              'type' => 'int',
+              'unsigned' => TRUE,
+              'not null' => TRUE,
+              'description' => t('Indicates whether this node is to be submitted or not and if yes public or private'),
+          ),
+          'product_name' => array(
+              'type' => 'varchar',
+              'length' => '255',
+              'not null' => TRUE,
+              'description' => t('Product Name'),
+          ),
+          'product_type' => array(
+              'type' => 'varchar',
+              'length' => '255',
+              'not null' => TRUE,
+              'description' => t('Under which product type in Google base'),
+          ),
+          'product_description' => array(
+              'type' => 'varchar',
+              'length' => '1024',
+              'not null' => TRUE,
+              'description' => t('Description of the product on google base'),
+          ),
+          'product_condition' => array(
+              'type' => 'int',
+              'unsigned' => TRUE,
+              'not null' => TRUE,
+              'description' => t('The condition of the product'),
+          ),
+          'product_model' => array(
+              'type' => 'varchar',
+              'length' => '255',
+              'not null' => TRUE,
+              'description' => t('product model'),
+          ),
+          'product_brand' => array(
+              'type' => 'varchar',
+              'length' => '255',
+              'not null' => TRUE,
+              'description' => t('product brand'),
+          ),
+          'product_price' => array(
+              'type' => 'int',
+              'unsigned' => TRUE,
+              'not null' => TRUE,
+              'description' => t('Product price'),
+          ),
+          'payment_method' => array(
+              'type' => 'varchar',
+              'length' => '255',
+              'not null' => TRUE,
+              'description' => t('What payment methods is this product available in'),
+          ),
+          'image_1' => array(
+              'type' => 'varchar',
+              'length' => '255',
+              'not null' => TRUE,
+              'description' => t('Product image which are chosen'),
+          ),
+          'image_2' => array(
+              'type' => 'varchar',
+              'length' => '255',
+              'not null' => TRUE,
+              'description' => t('Product image which are chosen'),
+          ),
+          'image_3' => array(
+              'type' => 'varchar',
+              'length' => '255',
+              'not null' => TRUE,
+              'description' => t('Product image which are chosen'),
+          ),
+      ),
+      'primary key' => array('nid'),
+  );
+  return $schema;
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function uc_gbase_uninstall() {
+  variable_del('uc_gbase_node_types');
+}

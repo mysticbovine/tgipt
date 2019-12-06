@@ -1,0 +1,148 @@
+<?php
+
+/**
+ * @file
+ * Provides Net 7 Days payment methods.
+ */
+
+
+/**
+ * Implements hook_menu().
+ */
+function uc_net_days_menu() {
+  $items['admin/store/orders/%uc_order/receive_check'] = array(
+    'title' => 'Receive Payment',
+    'description' => 'Record details of a payment that has been received.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('uc_net_seven_days_receive_check_form', 3),
+    'access arguments' => array('view all orders'),
+    'file' => 'uc_net_seven_days.admin.inc',
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_uc_payment_method().
+ */
+function uc_net_days_uc_payment_method() {
+  
+  $methods['seven_days'] = array(
+    'name'       => t('Net 7 Days'),
+    'title'      => t('Net 7 Days term'),
+    'desc'       => t('Full payment will be due 7 days from invoiced date.'),
+    'callback'   => 'uc_payment_method_net_days',
+    'weight'     => 1,
+    'checkout'   => FALSE,
+    'no_gateway' => TRUE,
+  );  
+  $methods['fourteen_days'] = array(
+    'name'       => t('Net 14 Days'),
+    'title'      => t('Net 14 Days term'),
+    'desc'       => t('Full payment will be due 14 days from invoiced date.'),
+    'callback'   => 'uc_payment_method_net_days',
+    'weight'     => 2,
+    'checkout'   => FALSE,
+    'no_gateway' => TRUE,
+  );  
+  $methods['thirty_days'] = array(
+    'name'       => t('Net 30 Days'),
+    'title'      => t('Net 30 Days term'),
+    'desc'       => t('Full payment will be due 30 days from invoiced date.'),
+    'callback'   => 'uc_payment_method_net_days',
+    'weight'     => 3,
+    'checkout'   => FALSE,
+    'no_gateway' => TRUE,
+  );  
+  $methods['sixty_days'] = array(
+    'name'       => t('Net 60 Days'),
+    'title'      => t('Net 60 Days term'),
+    'desc'       => t('Full payment will be due 60 days from invoiced date.'),
+    'callback'   => 'uc_payment_method_net_days',
+    'weight'     => 4,
+    'checkout'   => FALSE,
+    'no_gateway' => TRUE,
+  );  
+  $methods['end_of_month'] = array(
+    'name'       => t('Due End of Month'),
+    'title'      => t('Due End of Month'),
+    'desc'       => t('Full payment will be due at end of month of invoiced date.'),
+    'callback'   => 'uc_payment_method_net_days',
+    'weight'     => 5,
+    'checkout'   => FALSE,
+    'no_gateway' => TRUE,
+  );
+  return $methods;
+}
+
+
+/**
+ * Payment method callback for the "Due on Recipt" payment method.
+ */
+function uc_payment_method_net_days($op, &$order, $form = NULL, $form_state = NULL) {
+  switch ($op) {
+    case 'cart-details':
+      $build['policy'] = array(
+        '#markup' => '<p>' . variable_get('uc_net_days_policy', t('Full payment will be due 7 Days after invoiced date.')) . '</p>'
+      );
+
+      if (($min = variable_get('uc_net_days_min_order', 0)) < 0 && is_numeric($min)) {
+        $build['eligibility'] = array(
+          '#markup' => '<p>' . t('Minimum order of !number is required for payments due on receipt.', array('!number' => uc_currency_format($max))) . '</p>'
+        );
+      }
+
+  
+    case 'order-submit':
+      if ($order->payment_method == 'net_seven' &&
+          ($min = variable_get('uc_net_days_min_order', 0)) > 0 &&
+          is_numeric($min) &&
+          $order->order_total > $min) {
+        $result[] = array(
+          'pass' => FALSE,
+          'message' => t('Your final order total is lower than minimum required amount for payment due on receipt.  Please go back and select a different method of payment or add more items.')
+        );
+        $_SESSION['expanded_panes'][] = 'payment';
+        return $result;
+      }
+      // TODO: This falls through to the order-save case - is this deliberate?
+      // If so, it should be documented.
+
+    case 'order-save':
+      if (isset($order->payment_details['delivery_month']) &&
+          isset($order->payment_details['delivery_day'])   &&
+          isset($order->payment_details['delivery_year'])    ) {
+        db_merge('uc_net_days')
+          ->key(array('order_id' => $order->order_id))
+          ->fields(array(
+            'delivery_month' => $order->payment_details['delivery_month'],
+            'delivery_day'   => $order->payment_details['delivery_day'],
+            'delivery_year'  => $order->payment_details['delivery_year'],
+          ))
+          ->execute();
+      }
+      break;
+
+    /*case 'order-delete':
+      db_delete('uc_net_days')
+        ->condition('order_id', $order->order_id)
+        ->execute();
+      break;*/
+
+    case 'settings':
+      $form['uc_net_days_policy'] = array(
+        '#type' => 'textarea',
+        '#title' => t('Policy message'),
+        '#default_value' => variable_get('uc_net_days_policy', t('Full payment will be due 7 days from invoiced date.')),
+        '#description' => t('Help message shown at checkout.'),
+      );
+      $form['uc_net_days_min_order'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Minimum order total eligible for Due On Receipt Payment'),
+        '#default_value' => variable_get('uc_cod_min_order', 0),
+        '#description' => t('Set to 0 for no minimum order limit.'),
+      );
+      return $form;
+  }
+}
+

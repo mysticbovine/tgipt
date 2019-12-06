@@ -1,0 +1,26 @@
+Install like any other D7 module.
+
+After installing the module you'll want to set permissions on who can
+purchase via PO by using Drupal's permissions system.  Search for 
+"purchase order" and decide which role(s) should be able to use purchase
+orders.
+
+The PO number will show up when viewing and editing orders in the admin
+interface automatically, but to make the PO number show up in the 
+invoice(s) shown to the customer, you'll need to edit the template(s) 
+that the uc_order module uses.
+
+These are usually located in sites/all/modules/ubercart/uc_order/templates
+
+To add the PO number to a template, you can make a call to the function
+uc_po_invoice_po_number($order_payment_method, $order_link)
+
+Note that the function returns the html for the PO number, but doesn't 
+display it (in case you wanted to modify it first or something).
+
+To display it just echo it;  something like this in the template should
+do the trick:
+
+<?php echo uc_po_invoice_po_number($order_payment_method, $order_link); ?>
+
+For an example, see templates/uc_order/uc-order--customer-with-po.tpl.php.

@@ -1,0 +1,1001 @@
+<?php
+
+/**
+ * @file
+ * defination of uc_gbase.module
+ * */
+
+/**
+* Implements hook_menu().
+*/
+function uc_gbase_menu() {
+  $items = array();
+  $items["uc_gbase/autocomplete"] = array(
+      'title' => 'Autocomplete for uc_gbase_categories',
+      'page callback' => 'uc_gbase_categories_autocomplete',
+      'access callback' => TRUE,
+      'access arguments' => array('access content'),
+      'type' => MENU_CALLBACK
+  );
+  $items['admin/store/settings/uc_gbase'] = array(
+      'title' => 'Google Merchant Integration',
+      'description' => 'Settings for Google Merchant Integration.',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('uc_gbase_store_admin_settings_form'),
+      'access arguments' => array('administer ubercart google merchant integration'),
+      'type' => MENU_NORMAL_ITEM,
+  );
+  $items['admin/store/settings/uc_gbase/configure'] = array(
+      'title' => 'Google Merchant Integration Settings',
+      'description' => 'Settings for Google Merchant Integration.',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('uc_gbase_store_admin_settings_form'),
+      'access arguments' => array('administer ubercart google merchant integration'),
+      'type' => MENU_NORMAL_ITEM,
+  );
+  $items['admin/store/settings/uc_gbase/configure-content-types'] = array(
+      'title' => 'Google Merchant Content Types',
+      'description' => 'Settings for Google Merchant Enabled Content Types.',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('uc_gbase_store_admin_content_types_settings_form'),
+      'access arguments' => array('administer ubercart google merchant integration'),
+      'type' => MENU_NORMAL_ITEM,
+  );
+  $items['admin/store/settings/uc_gbase/submit'] = array(
+      'title' => 'Submit Products to Google Merchant',
+      'description' => 'Submit Products to Google Merchant',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('uc_gbase_submit_node_form'),
+      'access arguments' => array('administer ubercart google merchant integration'),
+      'type' => MENU_NORMAL_ITEM,
+  );
+
+  return $items;
+}
+
+/**
+* Implements hook_permission().
+*/
+function uc_gbase_permission() {
+  return array(
+      'administer ubercart google merchant integration' => array(
+          'title' => t('Administer Ubercart Google Merchant'),
+      )
+  );
+}
+
+function uc_gbase_categories_autocomplete($string) {
+
+  $categories = variable_get('uc_gbase_categories', array());
+
+  $matches = array();
+
+  foreach ($categories as $value) {
+    if (stripos($value, $string) === FALSE) {
+
+    }
+    else {
+      $matches[] = $value;
+    }
+  }
+
+  drupal_json_output($matches);
+}
+
+class uc_gbase_xml {
+
+  public $xml = NULL;
+  protected $app = 'http://www.w3.org/2007/app';
+  protected $gd = 'http://schemas.google.com/g/2005';
+  protected $sc = 'http://schemas.google.com/structuredcontent/2009';
+  protected $scp = 'http://schemas.google.com/structuredcontent/2009/products';
+
+  function __construct() {
+    $xmltext = "<?xml version='1.0'?>\n<entry xmlns='http://www.w3.org/2005/Atom' xmlns:app='$this->app' xmlns:gd='$this->gd' xmlns:sc='$this->sc' xmlns:scp='$this->scp'>
+            <app:control>
+                <sc:required_destination dest='ProductSearch'/>
+            </app:control>
+            </entry>";
+    $this->xml = simplexml_load_string($xmltext);
+  }
+
+  function add_element($name, $value, $type = NULL) {
+    $node = $this->xml->addChild($name, $value);
+    if (!empty($type)) {
+      $node->addAttribute('type', $type);
+    }
+  }
+
+  function add_attribute($name, $value, $type = NULL, $namespace = 'sc') {
+    $node = $this->xml->addChild($name, $value, $this->$namespace);
+    if (!empty($type)) {
+      $node->addAttribute('type', $type);
+    }
+  }
+
+  function set_draft($draft = FALSE) {
+    $value = empty($draft) ? 'no' : 'yes';
+    $control = $this->xml->addChild('app:control', NULL, $this->draftns);
+    $node = $control->addChild('app:draft', $value, $this->draftns);
+  }
+
+  public function __toString() {
+    return $this->xml->asXML();
+  }
+
+  public function get_xml() {
+    return $this->xml->asXML();
+  }
+
+}
+
+function uc_gbase_store_admin_settings_form() {
+
+  $form = array();
+
+  $form['uc_gbase_account_id'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Account ID'),
+      '#size' => 60,
+      '#maxlength' => 255,
+      '#required' => TRUE,
+      '#default_value' => variable_get('uc_gbase_account_id', ''),
+  );
+
+  $form['uc_gbase_app_name'] = array(
+      '#type' => 'textfield',
+      '#title' => t('App Name'),
+      '#size' => 60,
+      '#maxlength' => 255,
+      '#required' => TRUE,
+      '#default_value' => variable_get('uc_gbase_app_name', ''),
+  );
+
+  $form['uc_gbase_country'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Country'),
+      '#size' => 60,
+      '#maxlength' => 255,
+      '#required' => TRUE,
+      '#default_value' => variable_get('uc_gbase_country', ''),
+  );
+
+  $form['uc_gbase_currency'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Currency'),
+      '#size' => 60,
+      '#maxlength' => 255,
+      '#required' => TRUE,
+      '#default_value' => variable_get('uc_gbase_currency', 'USD'),
+  );
+
+  $form['uc_gbase_account_email'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Account Email'),
+      '#size' => 60,
+      '#maxlength' => 255,
+      '#required' => TRUE,
+      '#default_value' => variable_get('uc_gbase_account_email', ''),
+  );
+
+  $form['uc_gbase_account_password'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Account Password'),
+      '#size' => 60,
+      '#maxlength' => 255,
+      '#required' => TRUE,
+      '#default_value' => variable_get('uc_gbase_account_password', ''),
+  );
+
+  $form = system_settings_form($form);
+  return $form;
+}
+
+function uc_gbase_store_admin_content_types_settings_form() {
+
+  $types = array();
+
+  foreach (node_type_get_types() as $type => $name) {
+    $types[$type . '_node_form'] = $name->name;
+  }
+
+  $form['uc_gbase_node_types'] = array(
+      '#type' => 'checkboxes',
+      '#title' => 'Content Types',
+      '#default_value' => variable_get('uc_gbase_node_types', array('product_node_form' => 'product_node_form')),
+      '#options' => $types,
+  );
+
+  $form = system_settings_form($form);
+
+  return $form;
+}
+
+/**
+* Implements hook_form_alter().
+*/
+function uc_gbase_form_alter(&$form, $form_state, $form_id) {
+
+  $types = array_keys(variable_get('uc_gbase_node_types', array('product_node_form' => 'product_node_form')));
+
+  if (isset($form['type']) && isset($form['#node']) && in_array($form_id, $types)) {
+
+    $node = $form['#node'];
+
+    $categories = variable_get('uc_gbase_categories', array());
+
+    if (empty($categories)) {
+
+      $matches = array();
+
+      $categories = file_get_contents("http://www.google.com/basepages/producttype/taxonomy.en-US.txt");
+
+      foreach (preg_split("/(\r?\n)/", $categories) as $line) {
+        if (substr($line, 0, 1) == '#')
+          continue;
+        $matches[] = $line;
+      }
+
+      variable_set('uc_gbase_categories', $matches);
+    }
+
+    $form['uc_gbase'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Ubercart Google Base Integration Settings'),
+        '#collapsible' => TRUE,
+        '#collapsed' => FALSE,
+        '#tree' => TRUE,
+        '#group' => 'additional_settings',
+    );
+
+    $uc_gbase = 0;
+    if (property_exists($node, 'uc_gbase')) {
+      $uc_gbase = $node->uc_gbase;
+    }
+
+
+    $payment_options = array(
+        t('Cash'),
+        t('Check'),
+        t('Visa'),
+        t('MasterCard'),
+        t('Discover'),
+        t('WireTransfer'),
+        t('AmericanExpress'),
+    );
+
+    if ($uc_gbase != 0) {
+      $defaults['submit_type'] = $uc_gbase['submit_type'];
+      $defaults['product_name'] = $uc_gbase['product_name'];
+      $defaults['product_type'] = $uc_gbase['product_type'];
+      $defaults['product_description'] = $uc_gbase['product_description'];
+      $defaults['product_condition'] = $uc_gbase['product_condition'];
+      $defaults['product_brand'] = $uc_gbase['product_brand'];
+
+      $defaults['product_model'] = $uc_gbase['product_model'];
+      $defaults['product_price'] = $uc_gbase['product_price'];
+      $defaults['image_1'] = $uc_gbase['image_1'];
+      $defaults['image_2'] = $uc_gbase['image_2'];
+      $defaults['image_3'] = $uc_gbase['image_3'];
+
+      $payment_methods = explode('$', $uc_gbase['payment_method']);
+      array_pop($payment_methods);
+
+      foreach ($payment_options as $payment_index => $payment_method) {
+        if (in_array($payment_method, $payment_methods)) {
+          $defaults['payment_method'][$payment_index] = $payment_index;
+        }
+      }
+
+      foreach ($payment_options as $payment_index => $payment_method) {
+        if (!in_array($payment_method, $payment_methods)) {
+          $defaults['payment_method'][$payment_index] = 0;
+        }
+      }
+    }
+    else
+      $defaults = array();
+
+    $form['uc_gbase']['submit_type'] = array(
+        '#type' => 'radios',
+        '#default_value' => isset($defaults['submit_type']) ? $defaults['submit_type'] : 0,
+        '#options' => array(
+            t('Do not submit this product item to Google Merchant.'),
+            t('Submit this product item to Google Merchant'),
+        ),
+    );
+
+    $form['uc_gbase']['product_name'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Product Name'),
+        '#description' => 'The product name which will be published on Google Base, If left empty the default product title will be used.',
+        '#size' => 30,
+        '#maxlength' => 255,
+        '#default_value' => isset($defaults['product_name']) ? $defaults['product_name'] : '',
+    );
+
+    $form['uc_gbase']['product_type'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Product Type'),
+        '#description' => 'The category which this Product should be listed under on Google Product Search,
+            You Can refer to categories on <a href="http://www.google.com/support/merchants/bin/answer.py?hl=en&answer=160081">Google Merchant Help</a>,
+            Or you can find the sheet on <a href="http://www.google.com/basepages/producttype/taxonomy.en-US.txt">Product Taxonomy</a>,
+            An example of what you should enter in this field is:<br /> Arts & Entertainment > Crafts & Hobbies > Drawing & Painting > Painting',
+        '#size' => 150,
+        '#maxlength' => 255,
+        '#autocomplete_path' => 'uc_gbase/autocomplete',
+        '#default_value' => isset($defaults['product_type']) ? $defaults['product_type'] : '',
+    );
+
+    $form['uc_gbase']['product_description'] = array(
+        '#type' => 'textarea',
+        '#title' => t('Product Description'),
+        '#description' => 'The description of the product to be published on Google Base, <b>Must be all text, NO HTML</b>. If you have a wysiwyg editor on your site please click the <b>Switch to plain text editor link</b>.',
+        '#wysiwyg' => FALSE,
+        '#maxlength' => 1024,
+        '#default_value' => isset($defaults['product_description']) ? $defaults['product_description'] : '',
+    );
+
+    $form['uc_gbase']['product_model'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Product Model/SKU'),
+        '#description' => 'The model of the product </b>.',
+        '#size' => 60,
+        '#maxlength' => 255,
+        '#default_value' => isset($defaults['product_model']) ? $defaults['product_model'] : '',
+    );
+
+    $form['uc_gbase']['product_brand'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Product Brand'),
+        '#description' => 'The brand of the product </b>.',
+        '#size' => 60,
+        '#maxlength' => 255,
+        '#default_value' => isset($defaults['product_brand']) ? $defaults['product_brand'] : '',
+    );
+
+    $form['uc_gbase']['product_price'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Product Price'),
+        '#description' => 'The price of the product </b>.',
+        '#size' => 60,
+        '#maxlength' => 255,
+        '#default_value' => isset($defaults['product_price']) ? $defaults['product_price'] : '',
+    );
+
+    $form['uc_gbase']['product_condition'] = array(
+        '#type' => 'radios',
+        '#title' => 'Product Condition',
+        '#default_value' => isset($defaults['product_condition']) ? $defaults['product_condition'] : 0,
+        '#options' => array(
+            t('New'),
+            t('Used'),
+            t('Refurbished'),
+        ),
+    );
+
+    $form['uc_gbase']['payment_method'] = array(
+        '#type' => 'checkboxes',
+        '#title' => 'Payment Methods',
+        '#default_value' => isset($defaults['payment_method']) ? $defaults['payment_method'] : array(0),
+        '#options' => $payment_options,
+    );
+
+    $form['uc_gbase']['image_1'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Product Image 1 Url'),
+        '#description' => 'The url of the 1st product image (ex: http://www.example.com/images/image.jpg)',
+        '#size' => 60,
+        '#maxlength' => 255,
+        '#default_value' => isset($defaults['image_1']) ? $defaults['image_1'] : '',
+    );
+
+    $form['uc_gbase']['image_2'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Product Image 2 Url'),
+        '#description' => 'The url of the 2nd product image (ex: http://www.example.com/images/image.jpg)',
+        '#size' => 60,
+        '#maxlength' => 255,
+        '#default_value' => isset($defaults['image_2']) ? $defaults['image_2'] : '',
+    );
+
+    $form['uc_gbase']['image_3'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Product Image 3 Url'),
+        '#description' => 'The url of the 3rd product image (ex: http://www.example.com/images/image.jpg)',
+        '#size' => 60,
+        '#maxlength' => 255,
+        '#default_value' => isset($defaults['image_3']) ? $defaults['image_3'] : '',
+    );
+  }
+}
+
+/**
+* Implements hook_node_load().
+*/
+function uc_gbase_node_load($nodes, $types) {
+
+  $types = array();
+
+  $savedtypes = array_values(variable_get('uc_gbase_node_types', array('product_node_form' => 'product_node_form')));
+
+  foreach (node_type_get_types() as $type => $name) {
+    if (in_array($type . '_node_form', $savedtypes)) {
+      $types[] = $type;
+    }
+  }
+
+  foreach ($nodes as $nid => $node) {
+    if (in_array($node->type, $types)) {
+      $node->uc_gbase_id = uc_gbase_load($node->nid);
+      $result = db_query('SELECT submit_type, product_name, product_type, product_description, product_condition, product_model, product_brand, product_price, payment_method, image_1, image_2, image_3 FROM {uc_gbase} WHERE nid = :nid', array(':nid' => $node->nid))->fetchAssoc();
+      $node->uc_gbase = $result;
+    }
+  }
+}
+
+/**
+* Implements hook_node_insert().
+*/
+function uc_gbase_node_insert($node) {
+
+  $types = array();
+
+  $savedtypes = array_values(variable_get('uc_gbase_node_types', array('product_node_form' => 'product_node_form')));
+
+  foreach (node_type_get_types() as $type => $name) {
+    if (in_array($type . '_node_form', $savedtypes)) {
+      $types[] = $type;
+    }
+  }
+
+  if (in_array($node->type, $types)) {
+    $node->uc_gbase_id = uc_gbase_load($node->nid);
+    $node->uc_gbase_id = uc_gbase_insert_item($node);
+  }
+}
+
+/**
+* Implements hook_node_update().
+*/
+function uc_gbase_node_update($node) {
+
+  $types = array();
+
+  $savedtypes = array_values(variable_get('uc_gbase_node_types', array('product_node_form' => 'product_node_form')));
+
+  foreach (node_type_get_types() as $type => $name) {
+    if (in_array($type . '_node_form', $savedtypes)) {
+      $types[] = $type;
+    }
+  }
+
+  if (in_array($node->type, $types)) {
+    $node->uc_gbase_id = uc_gbase_load($node->nid);
+    $node->uc_gbase_id = uc_gbase_insert_item($node);
+  }
+}
+
+/**
+* Implements hook_node_delete().
+*/
+function uc_gbase_node_delete($node) {
+  $node->uc_gbase_id = uc_gbase_load($node->nid);
+  if (!empty($node->uc_gbase_id)) {
+    $deleted = uc_gbase_delete_item($node);
+    if (empty($deleted)) {
+      drupal_set_message(t('@title was not successfully deleted from Google Base.', array('@title' => $node->title)));
+    }
+    else {
+      uc_gbase_delete($node->nid);
+    }
+  }
+}
+
+function uc_gbase_authenticate() {
+
+  $url = 'https://www.google.com/accounts/ClientLogin';
+  $headers = array(
+      'Content-Type' => 'application/x-www-form-urlencoded',
+  );
+  $email = urlencode(variable_get('uc_gbase_account_email', ''));
+  $password = urlencode(variable_get('uc_gbase_account_password', ''));
+  $app_name = urlencode(variable_get('uc_gbase_app_name', ''));
+
+  $options = array(
+      'method' => 'POST',
+      'data' => "Email=$email&Passwd=$password&service=structuredcontent&source=$app_name",
+      'headers' => $headers,
+  );
+  $result = drupal_http_request($url, $options/* $headers, 'POST' , "Email=$email&Passwd=$password&service=structuredcontent&source=$app_name" */);
+
+  $result = stristr($result->data, 'Auth=');
+
+  return $result;
+}
+
+/**
+* Implements hook_load().
+*/
+function uc_gbase_load($nid) {
+  if (is_numeric($nid)) {
+    $gid = db_query("SELECT gid FROM {uc_gbase} WHERE nid = :nid", array(':nid' => $nid))->fetchField();
+    return $gid;
+  }
+}
+
+/**
+* Implements hook_delete().
+*/
+function uc_gbase_delete($nid) {
+  if (is_numeric($nid)) {
+    $result = db_query("DELETE FROM {uc_gbase} WHERE nid = :nid", array(':nid' => $nid));
+    return ($result->rowCount() > 0);
+  }
+}
+
+function uc_gbase_delete_item($node) {
+  global $language;
+  $account_id = variable_get('uc_gbase_account_id', '');
+  $store = variable_get('uc_gbase_country', '');
+  $item_url = "https://content.googleapis.com/content/v1/$account_id/items/products/schema/online:$language->language:$store:$node->uc_gbase_id";
+  $auth = uc_gbase_authenticate();
+  $headers = array(
+      'Content-Type' => 'application/atom+xml',
+      'Authorization' => 'GoogleLogin ' . trim($auth),
+  );
+  $options = array(
+      'method' => 'DELETE',
+      'data' => NULL,
+      'headers' => $headers,
+  );
+  $result = drupal_http_request($item_url, $options/* $headers, 'DELETE', NULL */);
+  return ($result->code == 200);
+}
+
+function uc_gbase_insert_item($node) {
+  $uc_gbase = $node->uc_gbase;
+
+  if ($uc_gbase['submit_type'] == 1) {
+    $record['nid'] = $node->nid;
+    $record['submit_type'] = $uc_gbase['submit_type'];
+    $record['product_name'] = $uc_gbase['product_name'];
+    $record['product_type'] = $uc_gbase['product_type'];
+    $record['product_description'] = $uc_gbase['product_description'];
+    $record['product_brand'] = $uc_gbase['product_brand'];
+    $record['product_model'] = $uc_gbase['product_model'];
+    $record['product_price'] = $uc_gbase['product_price'];
+    $record['product_condition'] = $uc_gbase['product_condition'];
+    $record['image_1'] = $uc_gbase['image_1'];
+    $record['image_2'] = $uc_gbase['image_2'];
+    $record['image_3'] = $uc_gbase['image_3'];
+
+    $record['payment_method'] = '';
+    $payment = $uc_gbase['payment_method'];
+    $i = 0;
+    foreach ($payment as $check_item) {
+      if ($i == 0 && $check_item == 0) {
+        $record['payment_method'] = $record['payment_method'] . 'Cash' . '$';
+        break;
+      }
+      $i++;
+    }
+    if ($payment[1] == 1)
+      $record['payment_method'] = $record['payment_method'] . 'Check' . '$';
+    if ($payment[2] == 2)
+      $record['payment_method'] = $record['payment_method'] . 'Visa' . '$';
+    if ($payment[3] == 3)
+      $record['payment_method'] = $record['payment_method'] . 'MasterCard' . '$';
+    if ($payment[4] == 4)
+      $record['payment_method'] = $record['payment_method'] . 'Discover' . '$';
+    if ($payment[5] == 5)
+      $record['payment_method'] = $record['payment_method'] . 'WireTransfer' . '$';
+    if ($payment[6] == 6)
+      $record['payment_method'] = $record['payment_method'] . 'AmericanExpress' . '$';
+
+    $record['gid'] = _uc_gbase_insert_xml($node, $record['payment_method']);
+
+    $nid = db_query("SELECT nid FROM {uc_gbase} WHERE nid = :nid", array(':nid' => $record['nid']))->fetchField();
+
+    if (empty($node->uc_gbase_id) && empty($nid)) {
+      $result = db_query("INSERT INTO {uc_gbase} (nid, gid, submit_type, product_name, product_type, product_description, product_condition, product_model, product_brand, product_price, payment_method, image_1, image_2, image_3)
+                         VALUES (:nid, :gid, :submit_type, :product_name, :product_type, :product_description, :product_condition, :product_model, :product_brand, :product_price, :payment_method, :image_1, :image_2, :image_3)", array(
+          ':nid' => $record['nid'], ':gid' => $record['gid'], ':submit_type' => $record['submit_type'], ':product_name' => $record['product_name'], ':product_type' => $record['product_type'],
+          ':product_description' => $record['product_description'], ':product_condition' => $record['product_condition'], ':product_model' => $record['product_model'], ':product_brand' => $record['product_brand'],
+          ':product_price' => $record['product_price'], ':payment_method' => $record['payment_method'], ':image_1' => $record['image_1'], ':image_2' => $record['image_2'], ':image_3' => $record['image_3']));
+    }
+    else {
+      $result = db_query("UPDATE {uc_gbase}
+                SET gid = :gid, submit_type = :submit_type , product_name = :product_name, product_type = :product_type, product_description = :product_description, product_condition = :product_condition ,product_model = :product_model ,product_brand = :product_brand,
+                product_price = :product_price, payment_method = :payment_method, image_1 = :image_1, image_2 = :image_2, image_3 = :image_3 WHERE nid = :nid", array(':gid' => $record['gid'], ':submit_type' => $record['submit_type'], ':product_name' => $record['product_name'],
+          ':product_type' => $record['product_type'], ':product_description' => $record['product_description'],
+          ':product_condition' => $record['product_condition'], ':product_model' => $record['product_model'], ':product_brand' => $record['product_brand'], ':product_price' => $record['product_price'],
+          ':payment_method' => $record['payment_method'], ':image_1' => $record['image_1'], ':image_2' => $record['image_2'], ':image_3' => $record['image_3'], ':nid' => $record['nid'])
+      );
+    }
+    //}
+    return $record['gid'];
+  }
+}
+
+function uc_gbase_get_images_list($node) {
+
+  global $base_url;
+
+  $images = '';
+  if (property_exists($node, 'original')) {
+    $form_image_fields = $node->original->uc_product_image;
+    if (is_array($form_image_fields) && array_key_exists('und', $form_image_fields)) {
+      foreach ($form_image_fields['und'] as $image) {
+        if (is_array($image)) {
+          if (array_key_exists('uri', $image))
+            $images = $images . file_create_url($image['uri']) . '$'; /* $base_url.'/'.$image_item['filepath'].'$'; */
+        }
+      }
+      $images_list = explode('$', $images);
+      array_pop($images_list);
+
+      return $images_list;
+    }
+    else {
+
+      return array();
+    }
+  }
+  else {
+    $form_image_fields = property_exists($node, 'uc_product_image') ? $node->uc_product_image : FALSE;
+    if (is_array($form_image_fields) && array_key_exists('und', $form_image_fields)) {
+      foreach ($form_image_fields['und'] as $image) {
+        if (is_array($image)) {
+          if (is_array($image)) {
+            if (array_key_exists('uri', $image))
+              $images = $images . file_create_url($image['uri']) . '$';
+          }
+        }
+      }
+      $images_list = explode('$', $images);
+      array_pop($images_list);
+
+      return $images_list;
+    }
+    else {
+
+      return array();
+    }
+  }
+}
+
+function _uc_gbase_insert_xml($node, $encoded_payment_methods) {
+  $item = new uc_gbase_xml();
+  global $base_url;
+  global $language;
+  $store = variable_get('uc_gbase_country', '');
+
+  $uc_gbase = $node->uc_gbase;
+
+  $item->add_attribute('item_type', 'products');
+
+  $item->add_element('title', ucwords(drupal_substr(drupal_strtolower($uc_gbase['product_name']), 0, 69)), 'text');
+  $item->add_element('content', htmlspecialchars($uc_gbase['product_description']), 'text');
+  $node_link = $item->xml->addChild('sc:link');
+  $node_link->addAttribute('rel', 'alternate');
+  $node_link->addAttribute('type', 'text/html');
+  $alias = drupal_lookup_path('alias', 'node/' . $node->nid);
+  if ($alias) {
+    $parts = explode('/', $alias);
+    $parts[1] = urlencode($parts[1]);
+    $alias = implode($parts, '/');
+    $node_link->addAttribute('href', $base_url . '/' . $alias);
+  }
+  else {
+    $node_link->addAttribute('href', $base_url . '/node/' . $node->nid);
+  }
+
+  $item->add_element('summary', htmlspecialchars($uc_gbase['product_description']));
+
+  $item->add_attribute('sc:id', $node->nid . $uc_gbase['product_model'] . $language->language);
+  $item->add_attribute('scp:product_type', htmlspecialchars($uc_gbase['product_type']), 'text', 'scp');
+  $item->add_attribute('sc:content_language', $language->language, 'text');
+  $item->add_attribute('sc:target_country', $store, 'text');
+  $price_item = $item->xml->addChild('scp:price', $uc_gbase['product_price'], 'http://schemas.google.com/structuredcontent/2009/products');
+  $price_item->addAttribute('unit', variable_get('uc_gbase_currency', 'USD'));
+  $item->add_attribute('scp:brand', $uc_gbase['product_brand'], 'text', 'scp');
+  $item->add_attribute('scp:mpn', $uc_gbase['product_model'], 'text', 'scp');
+  $item->add_attribute('scp:gtin', $uc_gbase['product_model'], 'text', 'scp');
+  $item->add_attribute('scp:availability', 'available for order', 'text', 'scp');
+  $item->add_attribute('scp:google_product_category', htmlspecialchars($uc_gbase['product_type']), 'text', 'scp');
+
+  if (!empty($uc_gbase['image_1']))
+    $item->add_attribute('sc:image_link', $uc_gbase['image_1']);
+  if (!empty($uc_gbase['image_2']))
+    $item->add_attribute('sc:image_link', $uc_gbase['image_2']);
+  if (!empty($uc_gbase['image_3']))
+    $item->add_attribute('sc:image_link', $uc_gbase['image_3']);
+
+  if ($uc_gbase['product_condition'] == 0) {
+    $condition = 'new';
+  }
+  elseif ($uc_gbase['product_condition'] == 1) {
+    $condition = 'used';
+  }
+  else {
+    $condition = 'refurbished';
+  }
+
+  $item->add_attribute('scp:condition', $condition, 'text', 'scp');
+
+  $payment_methods = explode('$', $encoded_payment_methods);
+  array_pop($payment_methods);
+
+  foreach ($payment_methods as $payment_method) {
+    $item->add_attribute('payment_accepted', $payment_method);
+  }
+  if ($node->shippable) {
+    $item->add_attribute('weight', floatval($node->weight) . ' ' . $node->weight_units);
+    $item->add_attribute('width', floatval($node->dim_width) . ' ' . $node->length_units);
+    $item->add_attribute('length', floatval($node->dim_length) . ' ' . $node->length_units);
+    $item->add_attribute('height', floatval($node->dim_height) . ' ' . $node->length_units);
+  }
+
+  $account_id = variable_get('uc_gbase_account_id', '');
+  $items_feed_url = "https://content.googleapis.com/content/v1/$account_id/items/products/generic";
+  $method = 'POST';
+
+  if (!empty($node->uc_gbase_id)) {
+    $items_feed_url .= '/online:' . $language->language . ':' . $store . ':' . $node->uc_gbase_id;
+    $method = 'PUT';
+  }
+
+  $uc_gbase_xml = $item->get_xml();
+
+  $auth = uc_gbase_authenticate();
+  $headers = array(
+      'Content-Type' => 'application/atom+xml',
+      'Authorization' => 'GoogleLogin ' . trim($auth),
+  );
+  $options = array(
+      'method' => $method,
+      'data' => $uc_gbase_xml,
+      'headers' => $headers,
+  );
+
+  $result = drupal_http_request($items_feed_url, $options/* $headers, $method, $uc_gbase_xml */);
+
+  $reply = simplexml_load_string($result->data);
+
+  if (property_exists($reply, 'error')) {
+    watchdog('uc_gbase', "Google Base error: " . $result->data);
+    watchdog('uc_gbase', "Google Base request: " . $result->data);
+  }
+
+  if (($result->code == '200' || $result->code == '201') && !empty($result->headers['Location'])) {
+    return $node->nid . $uc_gbase['product_model'] . $language->language;
+  }
+  elseif ($result->code == '404') {
+    if (!empty($node->uc_gbase_id)) {
+      uc_gbase_delete($node->nid);
+      unset($node->uc_gbase_id);
+      return _uc_gbase_insert_xml($node);
+    }
+    else {
+      if (user_access('administer ubercart google merchant integration')) {
+        drupal_set_message(t('Google Base error: @reason', array('@reason' => (string) $result->error)), 'error');
+      }
+    }
+  }
+
+  return FALSE;
+}
+
+/**
+* Implements hook_feeds_processor_targets_alter().
+*/
+function uc_gbase_feeds_processor_targets_alter(&$targets, $content_type) {
+
+  if ($content_type == 'node') {
+        $targets['submit_type'] = array(
+        'name' => t('Submit Product to Google Merchant (Yes = 1, No = 0)'),
+        'description' => t('Product Name on Google Merchant (Yes = 1, No = 0)'),
+        'callback' => 'uc_gbase_set_target',
+    );
+    $targets['product_name'] = array(
+        'name' => t('Product Name on Google Merchant'),
+        'description' => t('Product Name on Google Merchant'),
+        'callback' => 'uc_gbase_set_target',
+    );
+    $targets['product_description'] = array(
+        'name' => t('Product Description on Google Merchant'),
+        'description' => t('Product Description on Google Merchant'),
+        'callback' => 'uc_gbase_set_target',
+    );
+    $targets['product_model'] = array(
+        'name' => t('Product Model No (SKU) on Google Merchant'),
+        'description' => t('Product Model No (SKU) on Google Merchant'),
+        'callback' => 'uc_gbase_set_target',
+    );
+    $targets['product_type'] = array(
+        'name' => t('Product Type on Google Merchant (Refer to categories on http://www.google.com/basepages/producttype/taxonomy.en-US.txt'),
+        'description' => t('Product Type on Google Merchant (Refer to categories on http://www.google.com/basepages/producttype/taxonomy.en-US.txt)'),
+        'callback' => 'uc_gbase_set_target',
+    );
+    $targets['product_brand'] = array(
+        'name' => t('Product Brand on Google Merchant'),
+        'description' => t('Product Brand on Google Merchant'),
+        'callback' => 'uc_gbase_set_target',
+    );
+    $targets['product_condition'] = array(
+        'name' => t('Product Condition on Google Merchant (New = 0, Used = 1, Refurbished = 2)'),
+        'description' => t('Product Condition on Google Merchant (New = 0, Used = 1, Refurbished = 2)'),
+        'callback' => 'uc_gbase_set_target',
+    );
+    $targets['payment_method'] = array(
+        'name' => t('Product available payment methods for Google Merchant (Cash = 0, Check = 1, Visa = 2, MasterCard = 3, Discover = 4, WireTransfer = 5, AmericanExpress = 6)'),
+        'description' => t('Product available payment methods for Google Merchant (Cash = 0, Check = 1, Visa = 2, MasterCard = 3, Discover = 4, WireTransfer = 5, AmericanExpress = 6)'),
+        'callback' => 'uc_gbase_set_target',
+    );
+    $targets['product_price'] = array(
+        'name' => t('Product Price on Google Merchant'),
+        'description' => t('Product Price on Google Merchant in ('.variable_get('commerce_gmerchant_currency', 'USD').')'),
+        'callback' => 'uc_gbase_set_target',
+    );
+    $targets['image_1'] = array(
+        'name' => t('Product Image 1 on Google Merchant'),
+        'description' => t('Product Images on Google Merchant'),
+        'callback' => 'uc_gbase_set_target',
+    );
+    $targets['uc_gbase_image_2'] = array(
+        'name' => t('Product Image 2 on Google Merchant'),
+        'description' => t('Product Images on Google Merchant'),
+        'callback' => 'uc_gbase_set_target',
+    );
+    $targets['uc_gbase_image_3'] = array(
+        'name' => t('Product Image 3 on Google Merchant'),
+        'description' => t('Product Images on Google Merchant'),
+        'callback' => 'uc_gbase_set_target',
+    );
+  }
+}
+
+function uc_gbase_set_target($node, $target, $value) {
+  if (!isset($node->uc_gbase)) {
+    $node->uc_gbase = array();
+    $node->uc_gbase['submit_type'] = 1;
+  }
+  else {
+    $node->uc_gbase[$target] = strip_tags($value);
+  }
+}
+
+function uc_gbase_submit_node_form() {
+  $form = array();
+
+  $nodes = variable_get('site_products', array());
+
+  if (empty($nodes)) {
+
+    $result = db_query("SELECT * FROM {node} WHERE type='product'");
+
+    while ($row = $result->fetchAssoc()) {
+      $node = node_load($row['nid']);
+      $nodes[$row['nid']] = $row['title'];
+      variable_set('site_products', $nodes);
+    }
+  }
+
+  $form['nodes'] = array(
+      '#type' => 'select',
+      '#title' => t('Products'),
+      '#default_value' => 0,
+      '#options' => $nodes,
+      '#multiple' => TRUE,
+      '#description' => t('Site Products'),
+  );
+
+  $form['delete'] = array(
+      '#type' => 'checkbox',
+      '#title' => 'Delete Google Merchant Item',
+      '#default_value' => 0,
+  );
+
+  $form['product_type'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Product Type'),
+      '#size' => 100,
+      '#maxlength' => 128,
+      '#default_value' => '',
+      '#description' => 'The category which this Product should be listed under on Google Product Search,
+            You Can refer to categories on <a href="http://www.google.com/support/merchants/bin/answer.py?hl=en&answer=160081">Google Merchant Help</a>,
+            Or you can find the sheet on <a href="http://www.google.com/basepages/producttype/taxonomy.en-US.txt">Product Taxonomy</a>,
+            An example of what you should enter in this field is:<br /> Arts & Entertainment > Crafts & Hobbies > Drawing & Painting > Painting',
+      '#required' => TRUE,
+  );
+
+  $form['brand'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Brand'),
+      '#size' => 100,
+      '#maxlength' => 128,
+      '#default_value' => '',
+      '#description' => '',
+      '#required' => TRUE,
+  );
+
+  $form['product_condition'] = array(
+      '#type' => 'radios',
+      '#title' => 'Product Condition',
+      '#default_value' => 0,
+      '#options' => array(
+          t('New'),
+          t('Used'),
+          t('Refurbished'),
+      ),
+  );
+
+  $form['payment_method'] = array(
+      '#type' => 'checkboxes',
+      '#title' => 'Payment Methods',
+      '#default_value' => array(0, 1, 2, 3, 4, 5, 6),
+      '#options' => array(
+          t('Cash'),
+          t('Check'),
+          t('Visa'),
+          t('MasterCard'),
+          t('Discover'),
+          t('WireTransfer'),
+          t('AmericanExpress'),
+      ),
+  );
+
+  $form['submit'] = array('#type' => 'submit', '#value' => t('Submit Products'));
+
+  return $form;
+}
+
+function uc_gbase_submit_node_form_submit($form, &$form_state) {
+  $operations = array('operations' => array(), 'title' => t('Processing Products'));
+  foreach ($form_state['values']['nodes'] as $nid) {
+    $operations['operations'][] = array('uc_gbase_submit_node', array($nid, $form_state['values']['product_type'], $form_state['values']['product_condition'], $form_state['values']['payment_method'], $form_state['values']['brand'], $form_state['values']['delete']));
+  }
+  batch_set($operations);
+}
+
+function uc_gbase_submit_node($nid, $type, $condition, $payment_method, $brand, $delete) {
+  $node = node_load($nid);
+  global $base_url;
+  global $language;
+  if ($delete) {
+    $account_id = variable_get('uc_gbase_account_id', '');
+    $store = variable_get('uc_gbase_country', '');
+    $item_url = "https://content.googleapis.com/content/v1/$account_id/items/products/schema/online:$language->language:$store:$node->uc_gbase_id";
+    $auth = uc_gbase_authenticate();
+    $headers = array(
+        'Content-Type' => 'application/atom+xml',
+        'Authorization' => 'GoogleLogin ' . trim($auth),
+    );
+
+    $options = array(
+        'method' => 'DELETE',
+        'data' => NULL,
+        'headers' => $headers,
+    );
+    $result = drupal_http_request($item_url, $options);
+  }
+  else {
+    $node->uc_gbase = array(
+        'submit_type' => 1,
+        'product_name' => ucwords(drupal_substr(drupal_strtolower($node->title), 0, 69)),
+        'product_type' => $type,
+        'product_description' => htmlspecialchars(strip_tags($node->body['und'][0]['value'])),
+        'product_condition' => $condition,
+        'product_brand' => $brand,
+        'product_model' => $node->model,
+        'product_price' => $node->sell_price,
+        'payment_method' => $payment_method,
+        'image_1' => array_key_exists('und', $node->uc_product_image)? array(file_create_url($node->uc_product_image['und'][0]['uri'])) : '',
+        'image_2' => array_key_exists('und', $node->uc_product_image) && array_key_exists(1, $node->uc_product_image['und'])? array(file_create_url($node->uc_product_image['und'][1]['uri'])) : '',
+        'image_3' => array_key_exists('und', $node->uc_product_image) && array_key_exists(2, $node->uc_product_image['und'])? array(file_create_url($node->uc_product_image['und'][2]['uri'])) : '',
+    );
+    $node = node_submit($node);
+    node_save($node);
+  }
+}

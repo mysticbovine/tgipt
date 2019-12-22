@@ -455,7 +455,7 @@ sup {
 			background-color: @rewards;
 		}
 		&.cats {
-			background-color: @cats;
+			background-color: @artisan;
 		}
 		&:before {
 			content: " ";
@@ -671,6 +671,7 @@ sup {
 // Main
 // category6 = dog treats
 // category7 = cat treats
+// category197 = artisan treats
 // category18 = pet gear
 
 /* Featured products HP block */
@@ -871,6 +872,19 @@ h1.page-header {
 					&:hover {text-decoration: none; color: darken(@cats, 25);}
 				}
 			} 
+			&.category197{
+				border-style: solid;
+				border-width: 20px 10px;
+				-moz-border-image: url("../img/ruledot-cats.png") 20 10 repeat;
+				-webkit-border-image: url("../img/ruledot-cats.png") 20 10 repeat;
+				-o-border-image: url("../img/ruledot-cats.png") 20 10 repeat;
+				border-image: url("../img/ruledot-cats.png") 20 10  fill repeat;
+        color: @artisan;
+				a{ //cats
+					color: @artisan;
+					&:hover {text-decoration: none; color: darken(@artisan, 25);}
+				}
+			} 
 			&.category5{
 				border-style: solid;
 				border-width: 20px 10px;
@@ -913,6 +927,7 @@ h1.page-header {
 			&.category7 { color: @cats;}
 			&.category5 { color: @cats;}
 			&.category190 { color: @cats;}
+			&.category197 { color: @artisan;}
 		}
 	
 		
@@ -928,6 +943,7 @@ span{
 	&.category62 a {color: @leads;}
 	
 	&.category7 a {color: @cats}
+	&.category197 a {color: @artisan}
 	&.category5 a {color: @cat-treats}
 	
 	&.category6 a {color: @dogs;}
@@ -936,7 +952,7 @@ span{
 	&.category16 a {color: @travel;}
 	&.category1 a, &.category145 {color: @nutras;}
 	&.category187 a {color: @tshirts;}
-	&.category190 a {color: @cats;}
+	&.category190 a {color: @artisan;}
 	
 }
 .view-content {

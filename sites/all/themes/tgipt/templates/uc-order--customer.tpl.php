@@ -355,11 +355,37 @@
               </tr>
 			  <tr>
 				<td colspan="2">
-					<p>
-					<b><?php print t('Order comments:'); ?></b><br />
-					<?php print $order_comments; ?>
-					</p>
-					 <?php if ($pst_message) {print $pst_message;} ?>
+        <?php 
+          if($order_comments!="<i>No comments left.</i>"){
+            print "<p><b>";
+            print t('Order comments:');
+            print "</b><br />";
+            print $order_comments;
+            print "</p>";
+          }
+        ?>		
+
+        <?php 
+          if($order_last_comment!="-"){
+            print "<p><b>";
+            print t('Other Comments:');
+            print "</b><br />";
+            print $order_last_comment;
+            print "</p>";
+          }
+        ?>	
+
+          <?php 
+          if($admin_comments){
+            print "<p><b>";
+            print t('Payment record:');
+            print "</b><br />";
+            print $admin_comments;
+            print "</p>";
+          }
+        ?>
+				
+        <?php if ($pst_message) {print $pst_message;} ?>
 					
 					
 				</td>

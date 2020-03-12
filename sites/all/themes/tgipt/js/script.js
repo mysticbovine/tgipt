@@ -41,8 +41,8 @@ jQuery(document).ready(function($) {
 		  }
 		});
 		/* Add CDN */
-		$(".uc-product-node .product-info.display-price").append("<span class='cdn'>cdn</span>");
-		$(".page-grocery .uc-price").append("<span class='cdn'>cdn</span>");
+		// $(".uc-product-node .product-info.display-price").append("<span class='cdn'>cdn</span>");
+		// $(".page-grocery .uc-price").append("<span class='cdn'>cdn</span>");
 		/* Add MSRP to pices in grocery and retail line products */
 		var copy = "<div style='font-size: 20px; display: inline-block'> per carton.</div><div style='font-size: 20px'>($6.50 per bag wholesale. $12.99 per bag <abbr title='Manufacturers Suggested Retail Price' style=''>MSRP</abbr>)</div>";
 		/*$(	".page-grocery .display-price"	).append(" <abbr title='Manufacturers Suggested Retail Price' style='font-variant:small-caps'>msrp</abbr>"); NOT NEED FOR NOW. This is the main grocery page */

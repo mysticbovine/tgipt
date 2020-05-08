@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * skin_version2.views_default.inc
@@ -30,8 +31,26 @@ function skin_version2_views_default_views() {
   $handler->display->display_options['exposed_form']['type'] = 'basic';
   $handler->display->display_options['pager']['type'] = 'full';
   $handler->display->display_options['pager']['options']['items_per_page'] = '10';
-  $handler->display->display_options['style_plugin'] = 'default';
-  $handler->display->display_options['row_plugin'] = 'node';
+  $handler->display->display_options['style_plugin'] = 'views_bootstrap_grid_plugin_style';
+  $handler->display->display_options['style_options']['columns_horizontal'] = '-1';
+  $handler->display->display_options['style_options']['columns_vertical'] = '4';
+  $handler->display->display_options['style_options']['columns_xs'] = '12';
+  $handler->display->display_options['style_options']['columns_sm'] = '0';
+  $handler->display->display_options['style_options']['columns_md'] = '0';
+  $handler->display->display_options['style_options']['columns_lg'] = '4';
+  $handler->display->display_options['row_plugin'] = 'fields';
+  /* Field: Content: Image */
+  $handler->display->display_options['fields']['field_image']['id'] = 'field_image';
+  $handler->display->display_options['fields']['field_image']['table'] = 'field_data_field_image';
+  $handler->display->display_options['fields']['field_image']['field'] = 'field_image';
+  $handler->display->display_options['fields']['field_image']['label'] = '';
+  $handler->display->display_options['fields']['field_image']['element_class'] = 'img-thumbnail';
+  $handler->display->display_options['fields']['field_image']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['field_image']['click_sort_column'] = 'fid';
+  $handler->display->display_options['fields']['field_image']['settings'] = array(
+    'image_style' => 'product_details',
+    'image_link' => 'content',
+  );
   /* Field: Content: Title */
   $handler->display->display_options['fields']['title']['id'] = 'title';
   $handler->display->display_options['fields']['title']['table'] = 'node';
@@ -39,12 +58,28 @@ function skin_version2_views_default_views() {
   $handler->display->display_options['fields']['title']['label'] = '';
   $handler->display->display_options['fields']['title']['alter']['word_boundary'] = FALSE;
   $handler->display->display_options['fields']['title']['alter']['ellipsis'] = FALSE;
+  $handler->display->display_options['fields']['title']['element_type'] = 'h2';
+  $handler->display->display_options['fields']['title']['element_label_colon'] = FALSE;
+  /* Field: Content: Body */
+  $handler->display->display_options['fields']['body']['id'] = 'body';
+  $handler->display->display_options['fields']['body']['table'] = 'field_data_body';
+  $handler->display->display_options['fields']['body']['field'] = 'body';
+  $handler->display->display_options['fields']['body']['label'] = '';
+  $handler->display->display_options['fields']['body']['alter']['trim_whitespace'] = TRUE;
+  $handler->display->display_options['fields']['body']['alter']['nl2br'] = TRUE;
+  $handler->display->display_options['fields']['body']['alter']['strip_tags'] = TRUE;
+  $handler->display->display_options['fields']['body']['alter']['preserve_tags'] = '<b<';
+  $handler->display->display_options['fields']['body']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['body']['type'] = 'text_summary_or_trimmed';
+  $handler->display->display_options['fields']['body']['settings'] = array(
+    'trim_length' => '140',
+  );
   /* Sort criterion: Content: Post date */
   $handler->display->display_options['sorts']['created']['id'] = 'created';
   $handler->display->display_options['sorts']['created']['table'] = 'node';
   $handler->display->display_options['sorts']['created']['field'] = 'created';
   $handler->display->display_options['sorts']['created']['order'] = 'DESC';
-  /* Filter criterion: Content: Published */
+  /* Filter criterion: Content: Published status */
   $handler->display->display_options['filters']['status']['id'] = 'status';
   $handler->display->display_options['filters']['status']['table'] = 'node';
   $handler->display->display_options['filters']['status']['field'] = 'status';
@@ -62,6 +97,24 @@ function skin_version2_views_default_views() {
   /* Display: Page */
   $handler = $view->new_display('page', 'Page', 'page');
   $handler->display->display_options['path'] = 'blog';
+  $translatables['blog'] = array(
+    t('Master'),
+    t('Blog'),
+    t('more'),
+    t('Apply'),
+    t('Reset'),
+    t('Sort by'),
+    t('Asc'),
+    t('Desc'),
+    t('Items per page'),
+    t('- All -'),
+    t('Offset'),
+    t('« first'),
+    t('‹ previous'),
+    t('next ›'),
+    t('last »'),
+    t('Page'),
+  );
   $export['blog'] = $view;
 
   $view = new view();
@@ -147,6 +200,21 @@ function skin_version2_views_default_views() {
 
   /* Display: Block */
   $handler = $view->new_display('block', 'Block', 'block');
+  $translatables['category_descriptions'] = array(
+    t('Master'),
+    t('Category Descriptions'),
+    t('more'),
+    t('Apply'),
+    t('Reset'),
+    t('Sort by'),
+    t('Asc'),
+    t('Desc'),
+    t('See more'),
+    t('Weight'),
+    t('.'),
+    t(','),
+    t('Block'),
+  );
   $export['category_descriptions'] = $view;
 
   $view = new view();
@@ -164,7 +232,7 @@ function skin_version2_views_default_views() {
   $handler->display->display_options['title'] = 'Gallery';
   $handler->display->display_options['use_ajax'] = TRUE;
   $handler->display->display_options['use_more_always'] = FALSE;
-  $handler->display->display_options['access']['type'] = 'none';
+  $handler->display->display_options['access']['type'] = 'perm';
   $handler->display->display_options['cache']['type'] = 'none';
   $handler->display->display_options['query']['type'] = 'views_query';
   $handler->display->display_options['exposed_form']['type'] = 'basic';
@@ -172,7 +240,12 @@ function skin_version2_views_default_views() {
   $handler->display->display_options['pager']['options']['items_per_page'] = '9';
   $handler->display->display_options['pager']['options']['offset'] = '0';
   $handler->display->display_options['style_plugin'] = 'views_bootstrap_grid_plugin_style';
-  $handler->display->display_options['style_options']['columns'] = '3';
+  $handler->display->display_options['style_options']['columns_horizontal'] = '-1';
+  $handler->display->display_options['style_options']['columns_vertical'] = '4';
+  $handler->display->display_options['style_options']['columns_xs'] = '12';
+  $handler->display->display_options['style_options']['columns_sm'] = '6';
+  $handler->display->display_options['style_options']['columns_md'] = '4';
+  $handler->display->display_options['style_options']['columns_lg'] = '4';
   $handler->display->display_options['row_plugin'] = 'fields';
   /* Header: Global: Text area */
   $handler->display->display_options['header']['area']['id'] = 'area';
@@ -242,14 +315,14 @@ function skin_version2_views_default_views() {
   /* Display: Block */
   $handler = $view->new_display('block', 'Block', 'block_1');
   $handler->display->display_options['defaults']['title'] = FALSE;
-  $handler->display->display_options['title'] = 'TGIPT on Instagram';
+  $handler->display->display_options['title'] = 'Pet Treatery on Instagram';
   $handler->display->display_options['defaults']['header'] = FALSE;
   /* Header: Global: Text area */
   $handler->display->display_options['header']['area']['id'] = 'area';
   $handler->display->display_options['header']['area']['table'] = 'views';
   $handler->display->display_options['header']['area']['field'] = 'area';
   $handler->display->display_options['header']['area']['label'] = 'TGIPT on Instagram';
-  $handler->display->display_options['header']['area']['content'] = '<h2 class="block-title text-center"><a href="https://www.instagram.com/granvilleislandpettreatery/" target="_blank">TGIPT on Instagram</a></h2>';
+  $handler->display->display_options['header']['area']['content'] = '<h2 class="block-title text-center"><a href="https://www.instagram.com/granvilleislandpettreatery/" target="_blank">Pet Treatery on Instagram</a></h2>';
   $handler->display->display_options['header']['area']['format'] = 'full_html';
   $handler->display->display_options['defaults']['fields'] = FALSE;
   /* Field: Instagram photo: Instagram_link */
@@ -296,6 +369,26 @@ function skin_version2_views_default_views() {
   $handler->display->display_options['fields']['caption']['label'] = '';
   $handler->display->display_options['fields']['caption']['exclude'] = TRUE;
   $handler->display->display_options['fields']['caption']['element_label_colon'] = FALSE;
+  $translatables['gallery'] = array(
+    t('Master'),
+    t('Gallery'),
+    t('more'),
+    t('Apply'),
+    t('Reset'),
+    t('Sort by'),
+    t('Asc'),
+    t('Desc'),
+    t('<a href="[instagram_link]" target=_blank"><img src="[thumbnail]" class="img-responsive img-thumbnail"><a/>'),
+    t('<a href="[instagram_link]" target=_blank><img src="[standard_resolution]" class=""></a>'),
+    t('<a href="[instagram_link]" target=_blank"><img src="[low_resolution]" class="img-responsive"></a>'),
+    t('Page'),
+    t('<p>Click image for more details.</p>'),
+    t('Block'),
+    t('Pet Treatery on Instagram'),
+    t('TGIPT on Instagram'),
+    t('<h2 class="block-title text-center"><a href="https://www.instagram.com/granvilleislandpettreatery/" target="_blank">Pet Treatery on Instagram</a></h2>'),
+    t('<a href="[instagram_link]" target=_blank"><img src="[thumbnail]" class="img-responsive"><a/>'),
+  );
   $export['gallery'] = $view;
 
   $view = new view();
@@ -339,7 +432,7 @@ function skin_version2_views_default_views() {
   $handler->display->display_options['sorts']['created']['table'] = 'node';
   $handler->display->display_options['sorts']['created']['field'] = 'created';
   $handler->display->display_options['sorts']['created']['order'] = 'DESC';
-  /* Filter criterion: Content: Published */
+  /* Filter criterion: Content: Published status */
   $handler->display->display_options['filters']['status']['id'] = 'status';
   $handler->display->display_options['filters']['status']['table'] = 'node';
   $handler->display->display_options['filters']['status']['field'] = 'status';
@@ -359,6 +452,25 @@ function skin_version2_views_default_views() {
   $handler->display->display_options['defaults']['pager'] = FALSE;
   $handler->display->display_options['pager']['type'] = 'some';
   $handler->display->display_options['pager']['options']['items_per_page'] = '4';
+  $translatables['latest_blog_teaser'] = array(
+    t('Master'),
+    t('Latest Blog teaser'),
+    t('more'),
+    t('Apply'),
+    t('Reset'),
+    t('Sort by'),
+    t('Asc'),
+    t('Desc'),
+    t('Items per page'),
+    t('- All -'),
+    t('Offset'),
+    t('« first'),
+    t('‹ previous'),
+    t('next ›'),
+    t('last »'),
+    t('<h2 class="block-title"><a href="/blog">Latest Blog teaser</a></h2>'),
+    t('Block'),
+  );
   $export['latest_blog_teaser'] = $view;
 
   $view = new view();
@@ -384,7 +496,12 @@ function skin_version2_views_default_views() {
   $handler->display->display_options['pager']['options']['items_per_page'] = '8';
   $handler->display->display_options['pager']['options']['offset'] = '0';
   $handler->display->display_options['style_plugin'] = 'views_bootstrap_grid_plugin_style';
-  $handler->display->display_options['style_options']['columns'] = '4';
+  $handler->display->display_options['style_options']['columns_horizontal'] = '-1';
+  $handler->display->display_options['style_options']['columns_vertical'] = '3';
+  $handler->display->display_options['style_options']['columns_xs'] = '12';
+  $handler->display->display_options['style_options']['columns_sm'] = '6';
+  $handler->display->display_options['style_options']['columns_md'] = '3';
+  $handler->display->display_options['style_options']['columns_lg'] = '3';
   $handler->display->display_options['row_plugin'] = 'fields';
   /* Field: for css */
   $handler->display->display_options['fields']['taxonomy_catalog_1']['id'] = 'taxonomy_catalog_1';
@@ -406,6 +523,7 @@ function skin_version2_views_default_views() {
   $handler->display->display_options['fields']['taxonomy_catalog']['alter']['alter_text'] = TRUE;
   $handler->display->display_options['fields']['taxonomy_catalog']['alter']['text'] = '<h3 class="[taxonomy_catalog_1]">[taxonomy_catalog]</h3>';
   $handler->display->display_options['fields']['taxonomy_catalog']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['taxonomy_catalog']['delta_limit'] = '1';
   $handler->display->display_options['fields']['taxonomy_catalog']['delta_offset'] = '0';
   /* Field: Content: Image */
   $handler->display->display_options['fields']['uc_product_image']['id'] = 'uc_product_image';
@@ -438,7 +556,7 @@ function skin_version2_views_default_views() {
   $handler->display->display_options['fields']['title']['alter']['ellipsis'] = FALSE;
   $handler->display->display_options['fields']['title']['element_class'] = '[taxonomy_catalog_1]';
   $handler->display->display_options['fields']['title']['element_label_colon'] = FALSE;
-  /* Field: Content: Aliment */
+  /* Field: Content: Ailment */
   $handler->display->display_options['fields']['field_aliment']['id'] = 'field_aliment';
   $handler->display->display_options['fields']['field_aliment']['table'] = 'field_data_field_aliment';
   $handler->display->display_options['fields']['field_aliment']['field'] = 'field_aliment';
@@ -453,13 +571,14 @@ function skin_version2_views_default_views() {
   $handler->display->display_options['fields']['body']['field'] = 'body';
   $handler->display->display_options['fields']['body']['label'] = '';
   $handler->display->display_options['fields']['body']['alter']['alter_text'] = TRUE;
-  $handler->display->display_options['fields']['body']['alter']['text'] = '[field_aliment] [body]';
+  $handler->display->display_options['fields']['body']['alter']['text'] = '[body]';
   $handler->display->display_options['fields']['body']['alter']['trim_whitespace'] = TRUE;
   $handler->display->display_options['fields']['body']['alter']['max_length'] = '140';
   $handler->display->display_options['fields']['body']['alter']['more_link_text'] = 'More';
   $handler->display->display_options['fields']['body']['alter']['strip_tags'] = TRUE;
   $handler->display->display_options['fields']['body']['alter']['trim'] = TRUE;
   $handler->display->display_options['fields']['body']['alter']['preserve_tags'] = '<b> <strong> <br> <em>';
+  $handler->display->display_options['fields']['body']['alter']['html'] = TRUE;
   $handler->display->display_options['fields']['body']['element_label_colon'] = FALSE;
   $handler->display->display_options['fields']['body']['element_wrapper_type'] = 'p';
   /* Field: Product: Buy it now button */
@@ -469,7 +588,7 @@ function skin_version2_views_default_views() {
   $handler->display->display_options['fields']['buyitnowbutton']['label'] = '';
   $handler->display->display_options['fields']['buyitnowbutton']['exclude'] = TRUE;
   $handler->display->display_options['fields']['buyitnowbutton']['element_label_colon'] = FALSE;
-  /* Field: Content: Link */
+  /* Field: Content: Link to content */
   $handler->display->display_options['fields']['view_node']['id'] = 'view_node';
   $handler->display->display_options['fields']['view_node']['table'] = 'views_entity_node';
   $handler->display->display_options['fields']['view_node']['field'] = 'view_node';
@@ -485,7 +604,7 @@ function skin_version2_views_default_views() {
   $handler->display->display_options['sorts']['created']['table'] = 'node';
   $handler->display->display_options['sorts']['created']['field'] = 'created';
   $handler->display->display_options['sorts']['created']['order'] = 'DESC';
-  /* Filter criterion: Content: Published */
+  /* Filter criterion: Content: Published status */
   $handler->display->display_options['filters']['status']['id'] = 'status';
   $handler->display->display_options['filters']['status']['table'] = 'node';
   $handler->display->display_options['filters']['status']['field'] = 'status';
@@ -504,9 +623,10 @@ function skin_version2_views_default_views() {
   $handler->display->display_options['filters']['taxonomy_catalog_tid']['id'] = 'taxonomy_catalog_tid';
   $handler->display->display_options['filters']['taxonomy_catalog_tid']['table'] = 'field_data_taxonomy_catalog';
   $handler->display->display_options['filters']['taxonomy_catalog_tid']['field'] = 'taxonomy_catalog_tid';
-  $handler->display->display_options['filters']['taxonomy_catalog_tid']['operator'] = 'not empty';
-  $handler->display->display_options['filters']['taxonomy_catalog_tid']['value'] = '';
-  $handler->display->display_options['filters']['taxonomy_catalog_tid']['reduce_duplicates'] = TRUE;
+  $handler->display->display_options['filters']['taxonomy_catalog_tid']['operator'] = 'not';
+  $handler->display->display_options['filters']['taxonomy_catalog_tid']['value'] = array(
+    0 => '197',
+  );
   $handler->display->display_options['filters']['taxonomy_catalog_tid']['vocabulary'] = 'catalog';
 
   /* Display: Newest */
@@ -528,7 +648,7 @@ function skin_version2_views_default_views() {
   $handler->display->display_options['defaults']['title'] = FALSE;
   $handler->display->display_options['title'] = 'Featured Products';
   $handler->display->display_options['defaults']['sorts'] = FALSE;
-  /* Sort criterion: Content: Sticky */
+  /* Sort criterion: Content: Sticky status */
   $handler->display->display_options['sorts']['sticky']['id'] = 'sticky';
   $handler->display->display_options['sorts']['sticky']['table'] = 'node';
   $handler->display->display_options['sorts']['sticky']['field'] = 'sticky';
@@ -538,6 +658,29 @@ function skin_version2_views_default_views() {
   $handler->display->display_options['sorts']['changed']['table'] = 'node';
   $handler->display->display_options['sorts']['changed']['field'] = 'changed';
   $handler->display->display_options['sorts']['changed']['order'] = 'DESC';
+  $translatables['new_products'] = array(
+    t('Master'),
+    t('Just Added'),
+    t('more'),
+    t('Apply'),
+    t('Reset'),
+    t('Sort by'),
+    t('Asc'),
+    t('Desc'),
+    t('category[taxonomy_catalog_1-tid]'),
+    t('<h3 class="[taxonomy_catalog_1]">[taxonomy_catalog]</h3>'),
+    t('.'),
+    t(','),
+    t('<h2 class="[taxonomy_catalog_1]">[title]</h2>'),
+    t('[body]'),
+    t('More'),
+    t('Select'),
+    t('Newest'),
+    t('Popular'),
+    t('Popular Products'),
+    t('Featured'),
+    t('Featured Products'),
+  );
   $export['new_products'] = $view;
 
   $view = new view();
@@ -584,7 +727,7 @@ function skin_version2_views_default_views() {
   $handler->display->display_options['arguments']['term_node_tid_depth']['summary']['format'] = 'default_summary';
   $handler->display->display_options['arguments']['term_node_tid_depth']['summary_options']['items_per_page'] = '25';
   $handler->display->display_options['arguments']['term_node_tid_depth']['depth'] = '1';
-  /* Filter criterion: Content: Published */
+  /* Filter criterion: Content: Published status */
   $handler->display->display_options['filters']['status']['id'] = 'status';
   $handler->display->display_options['filters']['status']['table'] = 'node';
   $handler->display->display_options['filters']['status']['field'] = 'status';
@@ -608,6 +751,26 @@ function skin_version2_views_default_views() {
   $handler->display->display_options['defaults']['pager'] = FALSE;
   $handler->display->display_options['pager']['type'] = 'some';
   $handler->display->display_options['pager']['options']['items_per_page'] = '5';
+  $translatables['shop_parent'] = array(
+    t('Master'),
+    t('Shop Parent'),
+    t('more'),
+    t('Apply'),
+    t('Reset'),
+    t('Sort by'),
+    t('Asc'),
+    t('Desc'),
+    t('Items per page'),
+    t('- All -'),
+    t('Offset'),
+    t('« first'),
+    t('‹ previous'),
+    t('next ›'),
+    t('last »'),
+    t('All'),
+    t('Page'),
+    t('Block'),
+  );
   $export['shop_parent'] = $view;
 
   $view = new view();
@@ -632,13 +795,18 @@ function skin_version2_views_default_views() {
   $handler->display->display_options['pager']['type'] = 'full';
   $handler->display->display_options['pager']['options']['items_per_page'] = '10';
   $handler->display->display_options['style_plugin'] = 'views_bootstrap_grid_plugin_style';
-  $handler->display->display_options['style_options']['columns'] = '1';
+  $handler->display->display_options['style_options']['columns_horizontal'] = '-1';
+  $handler->display->display_options['style_options']['columns_vertical'] = '12';
+  $handler->display->display_options['style_options']['columns_xs'] = '12';
+  $handler->display->display_options['style_options']['columns_sm'] = '0';
+  $handler->display->display_options['style_options']['columns_md'] = '0';
+  $handler->display->display_options['style_options']['columns_lg'] = '12';
   $handler->display->display_options['row_plugin'] = 'fields';
   /* Header: Global: Text area */
   $handler->display->display_options['header']['area']['id'] = 'area';
   $handler->display->display_options['header']['area']['table'] = 'views';
   $handler->display->display_options['header']['area']['field'] = 'area';
-  $handler->display->display_options['header']['area']['content'] = '<h2 class="text-center">Healthy pets sit, stay and wag tails as their enthusiastic owners tell us why TGIPT is the most trusted one-stop shop for Nutra Supplement Treats&trade;.</h2>';
+  $handler->display->display_options['header']['area']['content'] = '<h2 class="text-center">Healthy pets sit, stay and wag tails as their enthusiastic owners tell us why Pet Treatery is the most trusted one-stop shop for Nutra Bites&trade;.</h2>';
   $handler->display->display_options['header']['area']['format'] = 'full_html';
   /* Footer: Global: Text area */
   $handler->display->display_options['footer']['area']['id'] = 'area';
@@ -683,7 +851,7 @@ function skin_version2_views_default_views() {
   $handler->display->display_options['sorts']['random']['id'] = 'random';
   $handler->display->display_options['sorts']['random']['table'] = 'views';
   $handler->display->display_options['sorts']['random']['field'] = 'random';
-  /* Filter criterion: Content: Published */
+  /* Filter criterion: Content: Published status */
   $handler->display->display_options['filters']['status']['id'] = 'status';
   $handler->display->display_options['filters']['status']['table'] = 'node';
   $handler->display->display_options['filters']['status']['field'] = 'status';
@@ -710,7 +878,12 @@ function skin_version2_views_default_views() {
   $handler->display->display_options['pager']['options']['items_per_page'] = '3';
   $handler->display->display_options['defaults']['style_plugin'] = FALSE;
   $handler->display->display_options['style_plugin'] = 'views_bootstrap_grid_plugin_style';
-  $handler->display->display_options['style_options']['columns'] = '3';
+  $handler->display->display_options['style_options']['columns_horizontal'] = '-1';
+  $handler->display->display_options['style_options']['columns_vertical'] = '4';
+  $handler->display->display_options['style_options']['columns_xs'] = '12';
+  $handler->display->display_options['style_options']['columns_sm'] = '6';
+  $handler->display->display_options['style_options']['columns_md'] = '4';
+  $handler->display->display_options['style_options']['columns_lg'] = '4';
   $handler->display->display_options['defaults']['style_options'] = FALSE;
   $handler->display->display_options['defaults']['row_plugin'] = FALSE;
   $handler->display->display_options['row_plugin'] = 'fields';
@@ -754,6 +927,39 @@ function skin_version2_views_default_views() {
 <h3>[title]</h3>
 </div>';
   $handler->display->display_options['fields']['nothing']['element_label_colon'] = FALSE;
+  $translatables['testimonials'] = array(
+    t('Master'),
+    t('Testimonials'),
+    t('more'),
+    t('Apply'),
+    t('Reset'),
+    t('Sort by'),
+    t('Asc'),
+    t('Desc'),
+    t('Items per page'),
+    t('- All -'),
+    t('Offset'),
+    t('« first'),
+    t('‹ previous'),
+    t('next ›'),
+    t('last »'),
+    t('<h2 class="text-center">Healthy pets sit, stay and wag tails as their enthusiastic owners tell us why Pet Treatery is the most trusted one-stop shop for Nutra Bites&trade;.</h2>'),
+    t('<p class="text-center"><a href="/about/testimonials" class="btn btn-black btn-lg geared-regular">Read more testimonials</a></p>'),
+    t('<div class="testimonial">
+
+[body]
+
+<h3>[title]</h3>
+</div>'),
+    t('Page'),
+    t('Block'),
+    t('<div class="testimonial hidden-xs">
+<div class="quote left hidden">&ldquo;</div>
+[body]
+<div class="quote right hidden">&rdquo;</div>
+<h3>[title]</h3>
+</div>'),
+  );
   $export['testimonials'] = $view;
 
   return $export;

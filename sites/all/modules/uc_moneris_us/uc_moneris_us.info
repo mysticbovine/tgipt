@@ -1,7 +1,7 @@
 name = Moneris Payment Gateway for Ubercart (US)
 description = A gateway used to process payments using Moneris.com for US clients
 dependencies[] = uc_payment
-dependencies[] = uc_credit
+dependencies[] = uc_credit_us
 package = Ubercart - payment
 core = 7.x
 

@@ -1,0 +1,785 @@
+<?php
+// $Id:$
+
+/**
+ * @file
+ * An Ubercart module used for processing payments using Moneris.com hosted pay page
+ *
+ * Based on uc_moneris, uc_paypal, and pg_moneris
+ * Developed by Steve McCullough (steve@stevemccullough.ca)
+ * Development sponsored by Leatherbeaten (http://leatherbeaten.com)
+ *
+ * Test CC numbers:
+ * MC:     5454545454545454
+ * VISA:   4242424242424242
+ * AMEX:   373599005095005
+ * Diners: 36462462742008
+ */
+
+
+/**
+ * Implements hook_menu().
+ */
+function uc_moneris_hpp_menu() {
+  $items = array();
+  $items['cart/checkout/uc_moneris_hpp_return/%'] = array(
+    'title' => 'Payment Confirmation',
+    'page callback' => 'uc_moneris_hpp_return',
+    'page arguments' => array(3),
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+  return $items;
+}
+
+
+/**
+ * Implements hook_theme().
+ */
+function uc_moneris_hpp_theme($existing, $type, $theme, $path) {
+  $themes = array();
+
+  $themes['uc_moneris_hpp_receipt_page'] = array(
+    'variables' => array(
+      'moneris' => NULL,
+      'order' => NULL,
+    ),
+  );
+
+  return $themes;
+}
+
+
+/**
+ * Implements hook_uc_payment_method().
+ */
+function uc_moneris_hpp_uc_payment_method() {
+  $methods = array();
+
+  // add CC logo images to method title
+  $path = base_path() . drupal_get_path('module', 'uc_moneris_hpp');
+  $title = t('Credit Card');
+  $show_cards = variable_get('uc_moneris_hpp_card_icons', array());
+  $cc_types   = array('visa', 'mastercard', 'discover', 'amex', 'sears');
+  foreach ($cc_types as $type) {
+    if (!$show_cards[$type]) {
+      continue;
+    }
+    $title .= '<img class="uc-credit-cctype uc-credit-cctype-' . $type . '" src="' . $path . '/images/' . $type . '.gif" alt= "' . $type . '" title ="' . $type . '" />';
+  }
+
+  $methods['moneris_hpp'] = array(
+    'name' => t('Moneris Hosted Pay Page'),
+    'title' => $title,
+    'review' => t('Credit Card'),
+    'desc' => t('Allow users to submit payments using the Moneris Hosted Pay Page.'),
+    'callback' => 'uc_moneris_hpp',
+    'weight' => 1,
+    'checkout' => FALSE,
+    'no_gateway' => TRUE,
+  );
+
+  return $methods;
+}
+
+
+/*
+ *  Handles the HPP payment method
+ */
+function uc_moneris_hpp($op, &$arg1) {
+  switch ($op) {
+    case 'settings':
+      global $base_url;
+      
+      
+      $form['moneris_hpp_settings']['config_info'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Moneris setup instructions'),
+        '#tree' => FALSE,
+        '#collapsible' => TRUE,
+        '#collapsed' => TRUE,
+      );
+      
+      $form['moneris_hpp_settings']['config_info']['uc_moneris_hpp_info'] = array(
+        '#markup' => t('
+        <div>
+        <h3>USA</h3>
+        <ul>
+        <li>Under "Response method", choose "Sent to your server as a POST"</li>
+        <li>set the Response URL to <strong>' . $base_url . '/cart/checkout/uc_moneris_hpp_return/approved</strong></li>
+        <li>Under "Security features": turn on verification, add your site (' . $base_url . ') as a "Referring URL", and choose "Displayed as XML on our server" as the response method</li>
+        <li>Use the HTTPS version of the above URLs if you have an SSL certificate.</li>
+        </ul>
+        </div>
+        <div>
+        <h3>Canada</h3>
+        <ul>
+        <li>Under "Response method", choose "Sent to your server as a POST"</li>
+        <li>set the Approved URL to <strong>' . $base_url . '/cart/checkout/uc_moneris_hpp_return/approved</strong></li>
+        <li>set the Declined URL to <strong>' . $base_url . '/cart/checkout/uc_moneris_hpp_return/declined</strong></li>
+        <li>Use the HTTPS version of the above URLs if you have an SSL certificate.</li>
+        <li>Under "Response/Receipt Field Configuration" check "Return the txn_number"</li>
+        <li>Under "Security features": turn on verification, add your site (' . $base_url . ') as a "Referring URL", and choose "Displayed as XML on our server" as the response method</li>
+        </ul>
+        </div>
+        '),
+      );
+      $form['moneris_hpp_settings']['uc_moneris_hpp_transaction_mode'] = array(
+        '#type' => 'select',
+        '#title' => t('Transaction mode'),
+        '#description' => t('Set to "test" to use Moneris\'s test servers and "production" to actually process payments.'),
+        '#options' => array(
+          'production' => t('Production'),
+          'test' => t('Test'),
+        ),
+        '#default_value' => variable_get('uc_moneris_hpp_transaction_mode', 'test'),
+        '#required' => TRUE,
+      );
+      $form['moneris_hpp_settings']['uc_moneris_hpp_debug_mode'] = array(
+        '#type' => 'select',
+        '#title' => t('Debug mode'),
+        '#description' => t('Set to "Debug" to display troubleshooting info on-screen.'),
+        '#options' => array(
+          'off' => t('Off'),
+          'debug' => t('Debug'),
+        ),
+        '#default_value' => variable_get('uc_moneris_hpp_debug_mode', 'off'),
+        '#required' => TRUE,
+      );
+      $form['moneris_hpp_settings']['moneris_live'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Account Information'),
+        '#tree' => FALSE,
+      );
+      $form['moneris_hpp_settings']['moneris_live']['uc_moneris_hpp_id'] = array(
+        '#type' => 'textfield',
+        '#title' => t('HPP ID'),
+        '#default_value' => variable_get('uc_moneris_hpp_id', ''),
+        '#description' => t("Please enter your Moneris hosted pay page ID. <div>(This called <strong>ps_store_id</strong> in the Canadian version, and <strong>hpp_id</strong> in the US version.)</div>"),
+        '#required' => TRUE,
+      );
+      $form['moneris_hpp_settings']['moneris_live']['uc_moneris_hpp_key'] = array(
+        '#type' => 'textfield',
+        '#title' => t('HPP Key'),
+        '#default_value' => variable_get('uc_moneris_hpp_key', ''),
+        '#description' => t("Please enter your Moneris hosted pay page key."),
+        '#required' => TRUE,
+      );
+      $form['moneris_hpp_settings']['moneris_test'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('TEST Account Information'),
+        '#tree' => FALSE,
+      );
+      
+      $form['moneris_hpp_settings']['moneris_test']['uc_moneris_test_intro'] = array(
+        '#markup' => '<p>Create test credentials on the <a href="https://esqa.moneris.com/mpg">Moneris test server</a>.</p>
+         Use these numbers for testing:
+          <ul>
+          <li>MC:     5454545454545454</li>
+          <li>VISA:   4242424242424242</li>
+          <li>AMEX:   373599005095005</li>
+          <li>Diners: 36462462742008</li>
+          </ul>',
+      );
+      
+      $form['moneris_hpp_settings']['moneris_test']['uc_moneris_hpp_id_test'] = array(
+        '#type' => 'textfield',
+        '#title' => t('HPP ID - TESTING'),
+        '#default_value' => variable_get('uc_moneris_hpp_id_test', ''),
+        '#description' => t("The ID for the test server."),
+        '#required' => TRUE,
+      );
+      $form['moneris_hpp_settings']['moneris_test']['uc_moneris_hpp_key_test'] = array(
+        '#type' => 'textfield',
+        '#title' => t('HPP Key - TESTING'),
+        '#default_value' => variable_get('uc_moneris_hpp_key_test', ''),
+        '#description' => t("The key for the test server."),
+        '#required' => TRUE,
+      );
+      $form['moneris_hpp_settings']['moneris_test']['uc_moneris_test_amt'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Testing transaction amount'),
+        '#default_value' => variable_get('uc_moneris_test_amt', ''),
+        '#description' => t("To send a specific amount as the order total to the test server, set that value here. Leave blank to use the order total."),
+        '#required' => TRUE,
+      );
+      $form['moneris_hpp_settings']['uc_moneris_hpp_country'] = array(
+        '#type' => 'select',
+        '#title' => t('Moneris country'),
+        '#description' => t('The Moneris pay page differs slightly between the US and Canadian versions.'),
+        '#default_value' => variable_get('uc_moneris_hpp_country', 'ca'),
+        '#options' => array(
+          'ca' => t('Canada'),
+          'us' => t('United States'),
+        ),
+        '#required' => TRUE,
+      );
+      $form['moneris_hpp_settings']['uc_moneris_hpp_lang'] = array(
+        '#type' => 'select',
+        '#title' => t('Language'),
+        '#options' => array(
+          'en-ca' => 'English',
+          'fr-ca' => ' French',
+        ),
+        '#default_value' => variable_get('uc_moneris_hpp_lang', 'en-ca'),
+        '#description' => t("The language for the Hosted Paypage display. (This is only relevant for Canadian Moneris accounts.)"),
+        '#required' => TRUE,
+      );
+      $form['moneris_hpp_settings']['uc_moneris_hpp_completed_message'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Purchase complete message'),
+        '#default_value' => variable_get('uc_moneris_hpp_completed_message', t('Thank you for your order')),
+        '#description' => t("Customize the message that is displayed on successful payment."),
+        '#required' => TRUE,
+      );
+      $form['moneris_hpp_settings']['uc_moneris_hpp_completed_page'] = array(
+        '#type' => 'select',
+        '#title' => t('Purchase complete page'),
+        '#options' => array(
+          'order' => 'Order summary',
+          'custom' => 'Custom summary',
+        ),
+        '#default_value' => variable_get('uc_moneris_hpp_completed_page', 'order'),
+        '#description' => t("Where should customers be directed upon successful payment? <div>The <em>Order summary</em> requires them to be authorized users with permission to see their orders. It ddisplays their order with the message specified above, if any.</div><div>The <em>Custom summary</em> page is provided by ec_moneris_hpp, and lists the ordered items and Moneris payment details. It can be customized using the theme_uc_moneris_hpp_receipt_page() theme function.</div>"),
+        '#required' => TRUE,
+      );
+      $cards = array('visa', 'mastercard', 'discover', 'amex', 'sears');
+      foreach ($cards as $card) {
+        $options[$card] = $card;
+      }
+      $form['moneris_hpp_settings']['uc_moneris_hpp_card_icons'] = array(
+        '#type' => 'checkboxes',
+        '#title' => t('Cards accepted'),
+        '#options' => $options,
+        '#default_value' => variable_get('uc_moneris_hpp_card_icons', array()),
+        '#description' => t("Select which card icons to display in the checkout screen."),
+        '#required' => TRUE,
+      );
+
+      return $form;
+      break;
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ * 
+ * Adds hidden fields to final UC checkout form (review order), and 
+ * alters its submit action to sent it to HPP.
+ */
+function uc_moneris_hpp_form_uc_cart_checkout_review_form_alter(&$form, $form_state, $form_id) {
+  if (($order_id = intval($_SESSION['cart_order'])) > 0) {
+    $order = uc_order_load($order_id);
+
+    if ($order->payment_method == 'moneris_hpp') {
+      // variables and URLs differ according to testing mode and country
+      $country = variable_get('uc_moneris_hpp_country', 'ca');
+      $mode    = variable_get('uc_moneris_hpp_transaction_mode', 'test');
+      $debug   = (variable_get('uc_moneris_hpp_debug_mode', 'off')  == 'debug');
+      $testing = ($mode == 'test');
+
+      if ($testing) {
+        // Create a fake order ID  to avoid duplicate order number errors @ Moneris
+        $order->order_id = 'uc_hpp_' . rand(100000, 999999) . '##' . $order->order_id;
+        
+        // Are we setting a defined order total for testing?
+        $test_amt = variable_get('uc_moneris_test_amt', 0);
+        if ($test_amt > 0) {
+          $order->order_total = $test_amt;
+        }
+      }
+
+      // save order ID for verification later
+      $_SESSION['uc_moneris_hpp_order_id'] = $order->order_id;
+
+      // hook_uc_moneris_hpp_alter_country: allow programmatic changes to country
+      uc_moneris_hpp_call_hook('uc_moneris_hpp_alter_country', $country, $order);
+
+      // HPP credentials differ for test/live
+      $hpp_id  = (!$testing) ? variable_get('uc_moneris_hpp_id', '')  : variable_get('uc_moneris_hpp_id_test', '');
+      $hpp_key = (!$testing) ? variable_get('uc_moneris_hpp_key', '') : variable_get('uc_moneris_hpp_key_test', '');
+
+      // Format amount
+      $charge_total = uc_currency_format($order->order_total, '', FALSE);
+
+      // Insert hidden values for Moneris HPP
+      switch ($country) {
+        case 'ca':
+          $subdomain = (!$testing) ? 'www3' : 'esqa';
+          $url       = "https://$subdomain.moneris.com/HPPDP/index.php";
+          $vars      = array(
+            'ps_store_id' => $hpp_id,
+            'hpp_key' => $hpp_key,
+            'lang' => variable_get('uc_moneris_hpp_lang', 'en-ca'),
+            'charge_total' => $charge_total,
+            'order_id' => $order->order_id,
+            'bill_first_name' => $order->billing_first_name,
+            'bill_last_name' => $order->billing_last_name,
+            'bill_company_name' => $order->billing_company,
+            'bill_address_one' => $order->billing_street1,
+            'bill_city' => $order->billing_city,
+            'bill_state_or_province' => uc_get_zone_code($order->billing_zone),
+            'bill_postal_code' => $order->billing_postal_code,
+            'bill_country' => uc_country_get_by_id($order->billing_country),
+            'ship_first_name' => $order->delivery_first_name,
+            'ship_last_name' => $order->delivery_last_name,
+            'ship_company_name' => $order->delivery_company,
+            'ship_address_one' => $order->delivery_street1,
+            'ship_city' => $order->delivery_city,
+            'ship_state_or_province' => uc_get_zone_code($order->delivery_zone),
+            'ship_postal_code' => $order->delivery_postal_code,
+            'ship_country' => uc_country_get_by_id($order->delivery_country),
+          );
+          break;
+
+        case 'us':
+          $subdomain = (!$testing) ? 'esplus' : 'esplusqa';
+          $url       = "https://$subdomain.moneris.com/DPHPP/index.php";
+          $vars      = array(
+            'hpp_id' => $hpp_id,
+            'hpp_key' => $hpp_key,
+            'amount' => $charge_total,
+            'order_no' => $order->order_id,
+            'od_bill_firstname' => $order->billing_first_name,
+            'od_bill_lastname' => $order->billing_last_name,
+            'od_bill_company' => $order->billing_company,
+            'od_bill_address' => $order->billing_street1,
+            'od_bill_city' => $order->billing_city,
+            'od_bill_state' => uc_get_zone_code($order->billing_zone),
+            'od_bill_zipcode' => $order->billing_postal_code,
+            'od_bill_country' => uc_country_get_by_id($order->billing_country),
+            'od_ship_firstname' => $order->delivery_first_name,
+            'od_ship_lastname' => $order->delivery_last_name,
+            'od_ship_company' => $order->delivery_company,
+            'od_ship_address' => $order->delivery_street1,
+            'od_ship_city' => $order->delivery_city,
+            'od_ship_state' => uc_get_zone_code($order->delivery_zone),
+            'od_ship_zipcode' => $order->delivery_postal_code,
+            'od_ship_country' => uc_country_get_by_id($order->delivery_country),
+          );
+          break;
+      }
+
+      // Call hook_uc_moneris_hpp_purchase_alter to allow changes to HPP form fields
+      uc_moneris_hpp_call_hook('uc_moneris_hpp_purchase_alter', $vars, $order);
+
+      // Add HPP vars to form object
+      foreach ($vars as $name => $value) {
+        $form['uc_moneris_hpp'][$name] = array(
+          '#type' => 'hidden',
+          '#value' => $value,
+        );
+      }
+
+      // Remove "Back" button because it submits the form (to moneris)
+      // we also remove the instruction to use it in uc_moneris_hpp_uc_get_message_alter
+      unset($form['back']);
+
+      // Change submit destination
+      $form['#action'] = $url;
+
+      // Debugging
+      $debug = (variable_get('uc_moneris_hpp_debug_mode', 'off')  == 'debug');
+      if ($debug) {
+        $log_data = array('!form' => $form);
+        uc_moneris_hpp_log('Checkout review form: <pre>!form</pre>', $log_data, 0);
+      }
+    }
+  }
+}
+
+
+/**
+ * Implements hooks
+ */
+function uc_moneris_hpp_call_hook($hook, &$vars, $order) {
+  foreach (module_implements($hook) as $module) {
+    $function = $module . '_' . $hook;
+    $function($vars, $order);
+  }
+}
+
+
+/**
+ * Menu callback: payment accepted
+ * 
+ * Process return values from HPP payment and validate.
+ **/
+function uc_moneris_hpp_return($result = FALSE) {
+  $country = variable_get('uc_moneris_hpp_country', 'ca');
+  $mode    = variable_get('uc_moneris_hpp_transaction_mode', 'test');
+  $debug   = (variable_get('uc_moneris_hpp_debug_mode', 'off')  == 'debug');
+  $testing = ($mode == 'test' || $debug);
+  $watchdog = array();
+
+  // debug
+  if ($debug) {
+    $params = array(
+     '!post' => $_POST,
+    );
+    uc_moneris_hpp_log('HPP return<br /><pre>!post</pre>', $params, 0);
+  }
+
+  // get our saved order ID
+  if (isset($_SESSION['uc_moneris_hpp_order_id'])) {
+    $order_id = $_SESSION['uc_moneris_hpp_order_id'];
+    unset($_SESSION['uc_moneris_hpp_order_id']);
+  }
+  else {
+    $order_id = 0;
+    uc_moneris_hpp_log('Missing order_id in session<br /><pre>!session</pre>', array('!session' => $_SESSION));
+  }
+  
+  // Save for logging etc.
+  $watchdog['!order_orig'] = $order_id;
+  
+  // Load order
+  $order = uc_moneris_hpp_get_order($order_id);
+
+  // Intercept declined / spoofed / etc orders.
+  if ($result !== 'approved') {
+    if ($order_id == $_POST['response_order_id']) {
+      uc_order_comment_save($order->order_id, 0, t('Moneris HPP payment declined: !details', array('!details' => print_r($_POST, TRUE))), 'admin');
+    }
+    
+    drupal_set_message(t('Your payment was not approved. Please try again'), 'error');
+    drupal_goto('cart/checkout');
+  }
+  
+  // Multi-currency hook
+  uc_moneris_hpp_call_hook('uc_moneris_hpp_alter_country', $country, $order);
+
+  // parse important POST values into variables
+  // note that some keys are different for ca/us  
+  $p_vars = array(
+    'p_order_id' => array(
+      'ca' => 'response_order_id',
+      'us' => 'order_no',
+    ),
+    'p_message' => array(
+      'ca' => 'message',
+      'us' => 'message',
+    ),
+    'p_code' => array(
+      'ca' => 'response_code',
+      'us' => 'response_code',
+    ),
+    'p_tx_key' => array(
+      'ca' => 'transactionKey',
+      'us' => 'verify_key',
+    ),
+    'p_amount' => array(
+      'ca' => 'charge_total',
+      'us' => 'amount',
+    ),
+    'p_tx_num' => array(
+      'ca' => 'txn_num',
+      'us' => 'txn_num',
+    ),
+  );
+  foreach ($p_vars as $name => $data) {
+    if (isset($_POST[$data[$country]])) {
+      $$name = $_POST[$data[$country]];
+    }
+    else {
+      $$name = FALSE;
+    }
+  }
+
+  // Trap problems
+  if (empty($p_order_id) || empty($p_code)) {
+    $watchdog['!post'] = $_POST;
+    uc_moneris_hpp_log('HPP return error for order !order_orig<br /><pre>$post</pre>', $watchdog);
+  }
+
+  // record approval status
+  $approved = (intval($p_code) < 50);
+  $watchdog['!order_no'] = $p_order_id;
+  $watchdog['!message']  = $p_message;
+  $watchdog['!response_code'] = $p_code;
+  uc_moneris_hpp_log('Moneris HPP !response_code ("!message") for order !order_no.', $watchdog);
+
+  // spoofed order id on approval?
+  if ($approved && $order_id != $p_order_id) {
+    uc_moneris_hpp_spoofed_id($watchdog);
+  }
+
+  // HPP credentials differ for test/live
+  $hpp_id  = (!$testing) ? variable_get('uc_moneris_hpp_id', '')  : variable_get('uc_moneris_hpp_id_test', '');
+  $hpp_key = (!$testing) ? variable_get('uc_moneris_hpp_key', '') : variable_get('uc_moneris_hpp_key_test', '');
+
+  // Verify transaction
+  if (is_numeric($p_code)) {
+    if (!empty($p_tx_key)) {
+      switch ($country) {
+        case 'ca':
+          $subdomain = (!$testing) ? 'www3' : 'esqa';
+          $url       = "https://$subdomain.moneris.com/HPPDP/verifyTxn.php?";
+          $vars = array(
+            'ps_store_id' => $hpp_id,
+            'hpp_key' => $hpp_key,
+            'transactionKey' => $p_tx_key,
+          );
+          break;
+
+        case 'us':
+          $subdomain = (!$testing) ? 'esplus' : 'esplusqa';
+          $url       = "https://$subdomain.moneris.com/DPHPP/index.php?";
+          $vars = array(
+            'hpp_id' => $hpp_id,
+            'hpp_key' => $hpp_key,
+            'verify_key' => $p_tx_key,
+          );
+          break;
+      }
+      
+      
+      // debug
+      if ($debug) {
+        $params = array(
+         '!url'  => $url,
+         '!vars' => $vars,
+        );
+        uc_moneris_hpp_log('HPP Verify<br />!url<br /><pre>!vars  </pre>', $params, 0);
+      }
+
+      // hook_uc_moneris_hpp_verify_alter: allow programmatic changes to verification vars
+      uc_moneris_hpp_call_hook('uc_moneris_hpp_verify_alter', $vars, $order_id);
+
+      // verify the transaction
+      $path        = isset($_GET['q']) ? $_GET['q'] : '<front>';
+      $current_url = url($path, array('absolute' => TRUE));
+
+      // make HTTP request with proper 'Referer' header
+      $headers = array(
+        'Content-Type' => 'application/x-www-form-urlencoded',
+        'Referer' => $current_url,
+      );
+      $data     = drupal_http_build_query($vars);
+      $response = drupal_http_request($url, array('headers' => $headers, 'method' => 'POST', 'data' => $data));
+      $xml      = simplexml_load_string($response->data);
+      $watchdog['!response'] = $response->data;
+
+      // debug
+      if ($debug) {
+        $params = array(
+         '!xml' => (array)$xml,
+         '!response' => $response,
+        );
+        uc_moneris_hpp_log('HPP response<br /><pre>!response</pre>', $params, 0);
+        uc_moneris_hpp_log('HPP XML<br /><pre>!xml</pre>', $params, 0);
+      }
+
+      // Problem with HTTP response? 
+      if (!$response) {
+        uc_moneris_hpp_log('HTTP response err for order !order_no', $watchdog);
+        $verified = FALSE;
+      }
+      
+      // Problem with XML?
+      elseif (!$xml) {
+        uc_moneris_hpp_log('Error in response for order !order_no <br /><pre>!response</pre>', $watchdog);
+        $verified = FALSE;
+      }
+
+      // we have verification XML
+      else {
+        // parse XML into variables
+        // again, there are some ca/us differences in field names
+        $xml_vars = array(
+          'verify_order_id' => array(
+            'ca' => 'order_id',
+            'us' => 'order_no',
+          ),
+          'verify_message' => array(
+            'ca' => 'status',
+            'us' => 'message',
+          ),
+          'verify_code' => array(
+            'ca' => 'response_code',
+            'us' => 'response_code',
+          ),
+          'verify_tx_key' => array(
+            'ca' => 'transactionKey',
+            'us' => 'verify_key',
+          ),
+          'verify_amount' => array(
+            'ca' => 'amount',
+            'us' => 'amount',
+          ),
+        );
+        foreach ($xml_vars as $name => $data) {
+          $eval = 'if (isset($xml->' . $data[$country] . ')) $' . $name . ' = (string)$xml->' . $data[$country] . ';';
+          eval($eval);
+        }
+
+        // record verification status
+        $verified = (strpos($verify_message, 'Valid') === 0);
+        $watchdog['!order_no'] = $verify_order_id;
+        $watchdog['!message']  = $verify_message; 
+        uc_moneris_hpp_log('!order_no verification: !message <br /><pre>!response</pre>', $watchdog);
+
+        // spoofed order id on verification?
+        if ($verified && $order_id != $verify_order_id) {
+          uc_moneris_hpp_spoofed_id($watchdog);
+        }
+      }
+    }
+
+    else {
+      $watchdog['post'] = $_POST;
+      uc_moneris_hpp_log('A verification code was not returned for order !order_no : <pre>!post</pre>', $watchdog);
+    }
+
+    // we are confident we have the correct order ID
+    $order = uc_moneris_hpp_get_order($order_id);
+
+    // success
+    if ($approved && ($verified || empty($p_tx_key))) {
+
+      // totals OK?
+      // @TODO - change behaviour here?
+      if ($p_amount != $order->order_total) {
+        $params = array(
+          '!approved' =>  $p_amount, 
+          '!total' => $order->order_total,
+          '!txn_num' => $p_tx_num, 
+          '!order_id' => $order->order_id
+        );
+        uc_order_comment_save($order->order_id, 0, t('Moneris-approved payment of !approved did not equal order total !total.', $params), 'admin');
+        uc_moneris_hpp_log('Payment !txn_num for order !order_id did not equal the order total.', $params);
+      }
+
+      // complete the sale
+      $complete = uc_cart_complete_sale($order, TRUE);
+
+      // record payment, comments
+      $comment = t('Moneris HPP transaction ID: !txn_num', array('!txn_num' => $p_tx_num));
+      uc_payment_enter($order->order_id, 'uc_moneris_hpp', $p_amount, $order->uid, NULL, $comment);
+      uc_order_comment_save($order->order_id, 0, t('Order created through website.'), 'admin');
+      uc_order_comment_save($order->order_id, 0, t('Payment of @amount submitted through Moneris Hosted Pay Page.', array('@amount' => $p_amount)), 'order', 'payment_received');
+      if ($verified) {
+        uc_order_comment_save($order->order_id, 0, t('Moneris HPP verified a payment of @amount.', array('@amount' => $p_amount)), 'admin');
+      }
+
+      // display message, redirect to order
+      $destination = variable_get('uc_moneris_hpp_completed_page', 'order');
+      switch ($destination) {
+        case 'custom':
+          // @TODO not tested in D7 (see following comment added by coder)
+          $output = theme('uc_moneris_hpp_receipt_page', array('moneris' => $_POST, 'order' => $order));
+          // TODO Please change this theme call as discussed at http://drupal.org/node/224333#theme_page.
+          //print theme('page', $output);
+          die();
+          break;
+
+        case 'order':
+          if ($message = variable_get('uc_moneris_hpp_completed_message', NULL)) {
+            drupal_set_message($message);
+          }
+          global $user;
+          drupal_goto('user/' . $user->uid . '/orders');
+          break;
+      }
+    }
+  }
+
+  // Fall through here on failure
+  drupal_set_message(t('Your payment did not complete successfully. Please try again'), 'error');
+  drupal_goto('cart/checkout');
+}
+
+
+/**
+ * Theme reciept page
+ */
+function theme_uc_moneris_hpp_receipt_page($variables) {
+  $moneris = $variables['moneris'];
+  $order = $variables['order'];
+  $output = '';
+
+  if ($message = variable_get('uc_moneris_hpp_completed_message', NULL)) {
+    $output .= '<div class="messages">' . t($message) . '</div>';
+  }
+
+  // order info
+  $title = (count($order->products) > 1) ? 'Items' : 'Item';
+  $output .= "<h2>$title</h2>\n";
+  $array = json_decode(json_encode($order->products), true);
+  $output .= theme_uc_cart_block_items($array);
+
+  // payment info
+  $output .= "<h2>Payment Information</h2>\n";
+  $moneris_header = array();
+  $moneris_data = array();
+  $moneris_data[] = array('Cardholder: ', $moneris['cardholder']);
+  $moneris_data[] = array('Card number: ', $moneris['f4l4']);
+  $moneris_data[] = array('Amount: ', $moneris['charge_total']);
+  $moneris_data[] = array('Transaction Type: ', $moneris['trans_name']);
+  $moneris_data[] = array('Date and Time: ', $moneris['date_stamp'] . ' ' . $moneris['time_stamp']);
+  $moneris_data[] = array('Authorisation Code : ', $moneris['bank_approval_code']);
+  $moneris_data[] = array('Reference Number: ', $moneris['bank_transaction_id']);
+  $output .= theme_table($moneris_header, $moneris_data);
+
+  return $output;
+}
+
+
+/**
+ * Implements hook_uc_message_alter().
+ */
+function uc_moneris_hpp_uc_get_message_alter(&$messages) {
+  $messages['review_instructions'] = t("Your order is almost complete. Please review the details below and click 'Submit order' if all the information is correct.");
+}
+
+
+/**
+ * Utility to handle mismatched order IDs.
+ *
+ * Following the lead of uc_paypal, provide an ambiguous user message.
+ */
+function uc_moneris_hpp_spoofed_id($watchdog = array()) {
+  watchdog(t('Thank you for your order! We will be notified by Moneris once we have received your payment.'));
+  uc_moneris_hpp_log('Possible order ID spoofing: !order_orig vs !order_no', $watchdog, $_POST);
+  drupal_goto('cart');
+}
+
+
+/**
+ * Utility to log/display error info
+ * 
+ * @arg $log_msg string to record in watchdog
+ * @arg $log_data array of info for watchdog
+ * @arg $log_code int severity code / set to 0 for no logging, only display
+ */
+function uc_moneris_hpp_log($log_msg = '', $log_data = array(), $log_code = WATCHDOG_NOTICE) { 
+  // Log to watchdog, if code > 0 (NB this is technically WATCHDOG_EMERGENCY, but never used in this module)
+  if (!empty($log_msg) && $log_code > 0) {
+    watchdog('uc_moneris_hpp', $log_msg, $log_data, $log_code);
+  }
+  
+  // Are we displaying debug data as well?
+  $debug = variable_get('uc_moneris_hpp_debug_mode', 'off');
+  if (!empty($log_data) && $debug == 'debug') {
+    if (function_exists('dsm')) {
+      dsm($log_data);
+    }
+    else {
+      drupal_set_message('<pre>' . print_r($log_data, TRUE) . '</pre>');
+    }
+  }
+}
+
+
+/**
+ * API helper to handle test case where there is extra crap prefixing
+ * the real order number
+ */
+function uc_moneris_hpp_get_order($id) {
+  $mode = variable_get('uc_moneris_hpp_transaction_mode', 'test');
+  if ($mode == 'test') {
+    $pieces = explode('##', $id);
+    $id = $pieces[1];
+  }
+  return uc_order_load($id);
+}

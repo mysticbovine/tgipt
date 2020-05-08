@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * skin_version2.features.menu_custom.inc

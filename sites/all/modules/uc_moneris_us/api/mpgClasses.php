@@ -6,11 +6,11 @@
 class mpgGlobals{
 
 var $Globals=array(
-                  'MONERIS_PROTOCOL' => 'https',
-                  'MONERIS_HOST' => 'www3.moneris.com',
-                  'MONERIS_TEST_HOST' => 'esqa.moneris.com',
-                  'MONERIS_PORT' =>'443',
-                  'MONERIS_FILE' => '/gateway2/servlet/MpgRequest',
+                  'MONERIS_US_PROTOCOL' => 'https',
+                  'MONERIS_US_OST' => 'www3.moneris.com',
+                  'MONERIS_US_TEST_HOST' => 'esqa.moneris.com',
+                  'MONERIS_US_PORT' =>'443',
+                  'MONERIS_US_FILE' => '/gateway2/servlet/MpgRequest',
                   'API_VERSION'  =>'MpgApi Version 2.03(php)',
                   'CLIENT_TIMEOUT' => '60'
                  );
@@ -53,11 +53,11 @@ class mpgHttpsPost{
 
   $g=new mpgGlobals();
   $gArray=$g->getGlobals();
-  $mode = variable_get('uc_moneris_transaction_mode', 'test');
-  $url=$gArray['MONERIS_PROTOCOL']."://".
-       ($mode == 'test' ? $gArray['MONERIS_TEST_HOST'] : $gArray['MONERIS_HOST']).":".
-       $gArray['MONERIS_PORT'].
-       $gArray['MONERIS_FILE'];
+  $mode = variable_get('uc_moneris_us_transaction_mode', 'test');
+  $url=$gArray['MONERIS_US_PROTOCOL']."://".
+       ($mode == 'test' ? $gArray['MONERIS_US_TEST_HOST'] : $gArray['MONERIS_US_HOST']).":".
+       $gArray['MONERIS_US_PORT'].
+       $gArray['MONERIS_US_FILE'];
 
   $ch = curl_init();
   curl_setopt($ch, CURLOPT_URL,$url);

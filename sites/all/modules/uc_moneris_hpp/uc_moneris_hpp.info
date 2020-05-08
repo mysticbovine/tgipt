@@ -1,0 +1,13 @@
+; $Id:$
+name = Moneris Hosted Pay Page for Ubercart
+description = A payment method that directs users to the Moneris.com HPP
+dependencies[] = uc_payment
+package = Ubercart - payment
+core = 7.x
+
+; Information added by Drupal.org packaging script on 2016-02-16
+version = "7.x-1.x-dev"
+core = "7.x"
+project = "uc_moneris_hpp"
+datestamp = "1455664140"
+

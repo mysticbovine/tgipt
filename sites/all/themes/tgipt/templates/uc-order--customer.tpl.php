@@ -86,10 +86,7 @@
 				$pst_message = "<b>BC PST exemption:</b><br />Brtish Columbia PST exemption is claimed by customer on purchase of goods for resale.  Customer has provided their PST #$pst";
 			}		
 		}
-    if ($country == 840){
-
-      $xport_num = "Export Number: c-135598";
-    }
+    
 	}
 
 ?>

@@ -216,9 +216,9 @@ function uc_moneris_us_mpi_complete() {
  ******************************************************************************/
 
 function uc_moneris_us_uc_payment_gateway() {
-  $gateways['moneris'] = array(
-    'title' => t('Moneris.com'),
-    'description' => t('Process credit card payments using the API service of Moneris.com.'),
+  $gateways['moneris_us'] = array(
+    'title' => t('Moneris.com (US)'),
+    'description' => t('Process credit card payments using the API service of Moneris.com (US).'),
     'settings' => 'uc_moneris_us_settings_form',
     'credit' => 'uc_moneris_us_charge',
   );
@@ -233,11 +233,11 @@ function uc_moneris_us_uc_payment_gateway() {
  * Callback for payment gateway settings.
  */
 function uc_moneris_us_settings_form() {
-  $form['moneris_settings'] = array(
+  $form['moneris_us_settings'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Moneris.com settings'),
+    '#title' => t('Moneris.com (US) settings'),
   );
-  $form['moneris_settings']['uc_moneris_us_api_version'] = array(
+  $form['moneris_us_settings']['uc_moneris_us_api_version'] = array(
     '#type' => 'select',
     '#title' => t('API Version'),
     '#description'=> t('The Moneris API differs slightly between the US and Canadian versions.'),
@@ -247,19 +247,19 @@ function uc_moneris_us_settings_form() {
       'us_' => t('United States'),
     ),
   );
-  $form['moneris_settings']['uc_moneris_us_store_id'] = array(
+  $form['moneris_us_settings']['uc_moneris_us_store_id'] = array(
     '#type' => 'textfield',
     '#title' => t('Store ID'),
     '#default_value' => variable_get('uc_moneris_us_store_id', ''),
-    '#description' => t('The Store ID used for the Moneris.com service.'),
+    '#description' => t('The Store ID used for the Moneris.com (US) service.'),
   );
-  $form['moneris_settings']['uc_moneris_us_api_token'] = array(
+  $form['moneris_us_settings']['uc_moneris_us_api_token'] = array(
     '#type' => 'textfield',
     '#title' => t('API Token'),
     '#default_value' => variable_get('uc_moneris_us_api_token', ''),
     '#description' => t('Your API Token key for sending data.'),
   );
-  $form['moneris_settings']['uc_moneris_us_transaction_type'] = array(
+  $form['moneris_us_settings']['uc_moneris_us_transaction_type'] = array(
     '#type' => 'select',
     '#title' => t('Transaction type to use'),
     '#options' => array(
@@ -270,7 +270,7 @@ function uc_moneris_us_settings_form() {
     '#description' => t('Use purchase to charge the card immediately after authentication. When CVV/CVD or Address Verification is enabled, a PreAuth will be perofrmed automatically. Use PreAuth Only to lock the funds at authentication time and then Capture the funds at a later time.'),
   );
 
-  $form['moneris_settings']['uc_moneris_us_cvv_enable'] = array(
+  $form['moneris_us_settings']['uc_moneris_us_cvv_enable'] = array(
     '#type' => 'select',
     '#title' => t('CVV/CVD Required'),
     '#options' => array('disabled' => 'Not Required', 'enabled' => 'Required'),
@@ -278,7 +278,7 @@ function uc_moneris_us_settings_form() {
     '#description' => t('eFraud must be enabled on your Moneris account.'),
   );
 
-  $form['moneris_settings']['uc_moneris_us_avs_enable'] = array(
+  $form['moneris_us_settings']['uc_moneris_us_avs_enable'] = array(
     '#type' => 'select',
     '#title' => t('Use Address Verification (AVS)'),
     '#options' => array(
@@ -289,14 +289,14 @@ function uc_moneris_us_settings_form() {
     '#description' => t('eFraud must be enabled on your Moneris account.'),
   );
 
-  $form['moneris_settings']['uc_moneris_us_vbv_enable'] = array(
+  $form['moneris_us_settings']['uc_moneris_us_vbv_enable'] = array(
     '#type' => 'select',
     '#title' => t('Enable VBV (Verified by VISA)'),
     '#options' => array('disabled' => 'Disabled', 'enabled' => 'Enabled'),
     '#default_value' => variable_get('uc_moneris_us_vbv_enable', 'disabled'),
     '#description' => t('Allow transactions to authenticate through the Moneris VBV system.'),
   );
-  $form['moneris_settings']['uc_moneris_us_vbv_strict'] = array(
+  $form['moneris_us_settings']['uc_moneris_us_vbv_strict'] = array(
     '#type' => 'select',
     '#title' => t('Enable VBV Strict Mode (Not-recommended)'),
     '#options' => array('disabled' => 'Disabled', 'enabled' => 'Enabled'),
@@ -304,7 +304,7 @@ function uc_moneris_us_settings_form() {
     '#description' => t('Strict mode only allows VISA cards that are enrolled to complete payment, Standard mode allows no-enrolled cards to proceed as a normal purchase.'),
   );
 
-  $form['moneris_settings']['uc_moneris_us_transaction_mode'] = array(
+  $form['moneris_us_settings']['uc_moneris_us_transaction_mode'] = array(
     '#type' => 'select',
     '#title' => t('Transaction mode'),
     '#description' => t('Transaction mode used for processing orders.'),
@@ -320,7 +320,7 @@ function uc_moneris_us_settings_form() {
 
 function uc_moneris_us_charge($order_id, $amount, $data) {
   if (!function_exists('curl_init')) {
-    drupal_set_message(t('The Moneris.com API service requires curl.  Please talk to your system administrator to get this configured.'));
+    drupal_set_message(t('The Moneris.com (US) API service requires curl.  Please talk to your system administrator to get this configured.'));
     return array('success' => FALSE);
   }
 

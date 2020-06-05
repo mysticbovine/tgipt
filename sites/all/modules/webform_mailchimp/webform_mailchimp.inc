@@ -24,6 +24,7 @@ function _webform_defaults_mailchimp() {
       'mailchimp_list' => '',
       'use_existing_email_field' => '',
       'private' => FALSE,
+      'doublein' => FALSE,
     ),
   );
 }
@@ -54,7 +55,7 @@ function _webform_edit_mailchimp($component) {
     $lists = mailchimp_get_lists();
     if (!empty($lists)) {
       foreach ($lists as $key => $list) {
-        $options[$list['id']] = $list['name'];
+        $options[$list->id] = $list->name;
       }
     }
     else {
@@ -131,12 +132,20 @@ function _webform_edit_mailchimp($component) {
     '#suffix' => '</div>',
   );
 
+  $form['extra']['doublein'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Require subscribers to Double Opt-in'),
+    '#description' => t('New subscribers will be sent a link with an email they must follow to confirm their subscription.'),
+    '#weight' => 5,
+    '#default_value' => !empty($component['extra']['doublein']),
+  );
+
   $form['extra']['mergefields'] = array(
     '#type' => 'textarea',
     '#title' => t('Mailchimp merge fields'),
     '#description' => t('Enter one key|value pair per line. Use the MailChimp field tag as the key and the webform field key as the value. For example "FNAME|firstname"'),
     '#default_value' => !empty($component['extra']['mergefields']) ? $component['extra']['mergefields'] : '',
-    '#weight' => 5,
+    '#weight' => 6,
   );
 
   $form['extra']['interestfields'] = array(
@@ -144,7 +153,7 @@ function _webform_edit_mailchimp($component) {
     '#title' => t('Mailchimp interests fields'),
     '#description' => t('Enter one key|value pair per line. Use the MailChimp group name as the key and the webform field (checkboxes or dropdown) key as the value. For example "FOOD|types_of_food_you_like"'),
     '#default_value' => !empty($component['extra']['interestfields']) ? $component['extra']['interestfields'] : '',
-    '#weight' => 6,
+    '#weight' => 7,
   );
 
   return $form;
@@ -209,7 +218,7 @@ function _webform_render_mailchimp($component, $value = NULL, $filter = TRUE) {
         '#title'             => !empty($component['extra']['checkbox_label']) ? _webform_filter_xss($component['extra']['checkbox_label']) : t('Subscribe to newsletter'),
         '#default_value'     => !empty($component['extra']['checkbox_checked_by_default']) ? $component['extra']['checkbox_checked_by_default'] : 0,
         '#description'       => $filter ? _webform_filter_descriptions($component['extra']['description']) : $component['extra']['description'],
-       // '#theme_wrappers'    => array('webform_element'),
+        '#theme_wrappers'    => array('webform_element'),
         '#webform_component' => $component,
         '#weight'            => $component['weight'],
       );

@@ -106,7 +106,6 @@ function uc_addresses_tokens($type, $tokens, $data = array(), $options = array()
         }
       }
       break;
-
     case 'uc_order':
       if (empty($data['uc_order'])) {
         // No order object, can happen. RulesTokenEvaluator sometimes sends empty data.
@@ -134,7 +133,6 @@ function uc_addresses_tokens($type, $tokens, $data = array(), $options = array()
         }
       }
       break;
-
     case 'user':
       $user = $data['user'];
       $user_tokens = array(

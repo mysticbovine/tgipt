@@ -281,7 +281,6 @@ function uc_addresses_hook_info() {
     'uc_addresses_fields_alter',
     'uc_addresses_preprocess_address_alter',
     'uc_addresses_address_load',
-    'uc_addresses_order_load',
     'uc_addresses_address_presave',
     'uc_addresses_address_insert',
     'uc_addresses_address_update',
@@ -325,13 +324,14 @@ function uc_addresses_user_insert(&$edit, $account, $category = NULL) {
 }
 
 /**
- * Implements hook_user_delete().
+ * Implements hook_user_cancel().
  */
-function uc_addresses_user_delete($account) {
+function uc_addresses_user_cancel($edit, $account, $method) {
   // We're deleting the user, so delete all his/her addresses as well.
   db_delete('uc_addresses')
     ->condition('uid', $account->uid)
     ->execute();
+  return;
 }
 
 /**
@@ -491,10 +491,8 @@ function uc_addresses_check_access_by_ids($access_type, $uid, $aid = NULL, $acco
   switch ($access_type) {
     case 'view':
       return UcAddressesPermissions::canViewAddress($address_user, $address, $account);
-
     case 'edit':
       return UcAddressesPermissions::canEditAddress($address_user, $address, $account);
-
     case 'delete':
       return UcAddressesPermissions::canDeleteAddress($address_user, $address, $account);
   }
@@ -657,11 +655,6 @@ function uc_addresses_user_address_property_get($account, $options, $name) {
  *   NULL otherwise.
  */
 function uc_addresses_uc_order_address_property_get($order, $options, $name) {
-  if (!isset($order->uc_addresses)) {
-    // Addresses aren't yet attached to the order. Do it now.
-    uc_addresses_order_attach_addresses($order);
-  }
-
   switch ($name) {
     case 'uc_addresses_delivery_address':
       return $order->uc_addresses['shipping'];
@@ -670,6 +663,9 @@ function uc_addresses_uc_order_address_property_get($order, $options, $name) {
     case 'uc_addresses_billing_address':
       return $order->uc_addresses['billing'];
       break;
+
+    default:
+      return NULL;
   }
 }
 
@@ -702,10 +698,8 @@ function uc_addresses_entity_access($op, $entity = NULL, $account = NULL) {
       case 'create':
       case 'update':
         return UcAddressesPermissions::canEditAddress($address_user, $address, $account);
-
       case 'view':
         return UcAddressesPermissions::canViewAddress($address_user, $address, $account);
-
       case 'delete':
         return UcAddressesPermissions::canDeleteAddress($address_user, $address, $account);
     }
@@ -716,10 +710,8 @@ function uc_addresses_entity_access($op, $entity = NULL, $account = NULL) {
       case 'create':
       case 'update':
         return UcAddressesPermissions::canEditAll($account);
-
       case 'view':
         return UcAddressesPermissions::canViewAll($account);
-
       case 'delete':
         return UcAddressesPermissions::canDeleteAll($account);
     }
@@ -1099,7 +1091,6 @@ function uc_addresses_uc_checkout_pane_alter(&$panes) {
       case 'billing':
         $panes[$key]['callback'] = 'uc_addresses_checkout_pane_billing';
         break;
-
       case 'delivery':
         $panes[$key]['callback'] = 'uc_addresses_checkout_pane_shipping';
         break;
@@ -1115,7 +1106,7 @@ function uc_addresses_uc_checkout_pane_alter(&$panes) {
  * @return void
  */
 function uc_addresses_uc_order_pane_alter(&$panes) {
-  // Load file with the callback functions.
+  // Load file with the callback functions
   module_load_include('ubercart.inc', 'uc_addresses');
 
   foreach ($panes as $key => $pane) {
@@ -1123,7 +1114,6 @@ function uc_addresses_uc_order_pane_alter(&$panes) {
       case 'ship_to':
         $panes[$key]['callback'] = 'uc_addresses_order_pane_ship_to';
         break;
-
       case 'bill_to':
         $panes[$key]['callback'] = 'uc_addresses_order_pane_bill_to';
         break;
@@ -1136,7 +1126,7 @@ function uc_addresses_uc_order_pane_alter(&$panes) {
  *
  * @return void
  */
-function uc_addresses_uc_order($op, &$order) {
+function uc_addresses_uc_order($op, &$order, $arg2) {
   global $user;
   switch ($op) {
     case 'new':
@@ -1154,7 +1144,7 @@ function uc_addresses_uc_order($op, &$order) {
             if ($order_address_type == 'shipping') {
               $order_address_type = 'delivery';
             }
-            $address_values = $address->getRawFieldData();
+            $address_values = $address->getFieldData();
             foreach ($address_values as $fieldname => $value) {
               $order_fieldname = $order_address_type . '_' . $fieldname;
               $order->$order_fieldname = $value;
@@ -1173,16 +1163,32 @@ function uc_addresses_uc_order($op, &$order) {
         $order->uc_addresses[$address_type] = $address;
       }
       break;
-
     case 'load':
-      uc_addresses_order_attach_addresses($order);
+      $order->uc_addresses = array();
+      foreach (uc_addresses_order_address_types() as $order_address_type) {
+        $address_type = $order_address_type;
+        if ($order_address_type == 'delivery') {
+          $address_type = 'shipping';
+        }
+
+        // Check session first for temporary saved addresses.
+        if (isset($_SESSION['uc_addresses_order'][$order->order_id][$address_type])) {
+          $address = unserialize($_SESSION['uc_addresses_order'][$order->order_id][$address_type]);
+        }
+        else {
+          // Construct new address.
+          $address = uc_addresses_new_address_from_order($order, $order_address_type);
+        }
+        $address->address_type = $address_type;
+        $order->uc_addresses[$address_type] = $address;
+      }
       break;
 
     case 'save':
       if (!isset($order->uc_addresses)) {
         // Attach address objects immediately after saving, so the order
         // doesn't require a reload to gain the address objects.
-        uc_addresses_order_attach_addresses($order);
+        uc_addresses_uc_order('load', $order, $arg2);
       }
       break;
   }
@@ -1195,28 +1201,23 @@ function uc_addresses_uc_order($op, &$order) {
  *
  * @param object $order
  *   The Ubercart order.
- * @param object $account
+ * @param object $user
  *   The user who ordered.
  *
  * @return void
  */
-function uc_addresses_uc_checkout_complete($order, $account) {
-  if (empty($account->uid)) {
-    // No account has been created. This can happen when anonymous checkout is
-    // enabled and the "Customer information" pane is disabled.
-    return;
-  }
+function uc_addresses_uc_checkout_complete($order, $user) {
   if (isset($order->uc_addresses)) {
     $saved_addresses = array();
     foreach ($order->uc_addresses as $address_type => $address) {
       if (!empty($address->save_address)) {
         // Check if the user already has similar looking addresses.
-        if (UcAddressesAddressBook::get($account->uid)->compareAddress($address)) {
+        if (UcAddressesAddressBook::get($user->uid)->compareAddress($address)) {
           // Don't save the address.
         }
         else {
           if (!$address->isOwned()) {
-            $address->setOwner($account->uid);
+            $address->setOwner($user->uid);
           }
 
           // Save address.
@@ -1254,33 +1255,6 @@ function uc_addresses_uc_checkout_complete($order, $account) {
 
   // Remove any temporary addresses from session.
   unset($_SESSION['uc_addresses_order']);
-}
-
-/**
- * Attaches UcAddressesAddress instances to the order.
- */
-function uc_addresses_order_attach_addresses($order) {
-  $order->uc_addresses = array();
-  foreach (uc_addresses_order_address_types() as $order_address_type) {
-    $address_type = $order_address_type;
-    if ($order_address_type == 'delivery') {
-      $address_type = 'shipping';
-    }
-
-    // Check session first for temporary saved addresses.
-    if (isset($_SESSION['uc_addresses_order'][$order->order_id][$address_type])) {
-      $address = unserialize($_SESSION['uc_addresses_order'][$order->order_id][$address_type]);
-    }
-    else {
-      // Construct new address.
-      $address = uc_addresses_new_address_from_order($order, $order_address_type);
-    }
-    $address->address_type = $address_type;
-    $order->uc_addresses[$address_type] = $address;
-  }
-
-  // Allow other modules to react on this.
-  module_invoke_all('uc_addresses_order_load', $order);
 }
 
 /**
@@ -1390,9 +1364,9 @@ function uc_addresses_get_address_fields() {
  * Returns all handler instances of fields registered by hook_uc_addresses_fields().
  *
  * @param UcAddressesSchemaAddress $address
- *   An address object.
+ *   An address object
  * @param string $context
- *   The context where the fields are used for.
+ *   The context where the fields are used for
  *
  * @return array
  *   A list of handler instances for all available address fields.
@@ -1424,24 +1398,19 @@ function uc_addresses_get_address_field_handler(UcAddressesSchemaAddress $addres
   ctools_include('plugins');
   ctools_plugin_api_include('uc_addresses', 'uc_addresses_fields', 2, 2);
   $fields_data = uc_addresses_get_address_fields();
-  try {
-    if (isset($fields_data[$fieldname])) {
-      $class = ctools_plugin_load_class('uc_addresses', 'field_handlers', $fields_data[$fieldname]['handler'], 'handler');
-      if ($class) {
-        return new $class($fieldname, $address, $context);
-      }
-      // Handler not found.
-      $args = array('%handler' => $fields_data[$fieldname]['handler'], '%field' => $fieldname);
-      if (user_access('administer store')) {
-        drupal_set_message(t('Missing Ubercart Addresses field handler %handler for field %field. Check whether all required libraries and modules are installed properly.', $args), 'error', FALSE);
-      }
-      else {
-        drupal_set_message(t('Missing Ubercart Addresses field handler %handler for field %field. Please contact your site administrator.', $args), 'error', FALSE);
-      }
+  if (isset($fields_data[$fieldname])) {
+    $class = ctools_plugin_load_class('uc_addresses', 'field_handlers', $fields_data[$fieldname]['handler'], 'handler');
+    if ($class) {
+      return new $class($fieldname, $address, $context);
     }
-  }
-  catch (UcAddressesIncompatibleHandlerException $e) {
-    // Ignore incompatible handlers.
+    // Handler not found.
+    $args = array('%handler' => $fields_data[$fieldname]['handler'], '%field' => $fieldname);
+    if (user_access('administer store')) {
+      drupal_set_message(t('Missing Ubercart Addresses field handler %handler for field %field. Check whether all required libraries and modules are installed properly.', $args), 'error', FALSE);
+    }
+    else {
+      drupal_set_message(t('Missing Ubercart Addresses field handler %handler for field %field. Please contact your site administrator.', $args), 'error', FALSE);
+    }
   }
   // Return an instance of UcAddressesMissingFieldHandler instead.
   $class = ctools_plugin_load_class('uc_addresses', 'field_handlers', 'UcAddressesMissingFieldHandler', 'handler');
@@ -1634,9 +1603,6 @@ function uc_addresses_form_uc_store_address_fields_form_alter(&$form, &$form_sta
 /**
  * Implements hook_form_FORM_ID_alter() for form uc_order_address_book_form().
  *
- * Makes sure selectable addresses at the order administration can come from the
- * address book.
- *
  * @return void
  */
 function uc_addresses_form_uc_order_address_book_form_alter(&$form, &$form_state) {
@@ -1666,7 +1632,7 @@ function uc_addresses_form_uc_order_address_book_form_alter(&$form, &$form_state
 }
 
 /**
- * Returns an array of addresses to be used for the selecting address widget.
+ * Returns an array of addresses to be used to for the selecting address widget.
  *
  * @param int $uid
  *   The user ID to select addresses for.
@@ -1717,7 +1683,7 @@ function uc_addresses_get_select_addresses($uid, $context = 'default', $type = '
           unset($new_addresses[$index]);
         }
       }
-      // Add to addresses array.
+      // Add to addresses array
       $addresses = array_merge($addresses, $new_addresses);
     }
   }
@@ -1860,6 +1826,13 @@ function theme_uc_addresses_default_address_checkbox($variables) {
 function uc_addresses_preprocess_uc_order(&$variables) {
   $order = &$variables['order'];
 
+  if (isset($variables['order_addresses_shipping_address'])) {
+    $variables['order_shipping_address'] = $variables['order_addresses_shipping_address'];
+  }
+  if (isset($variables['order_addresses_billing_address'])) {
+    $variables['order_billing_address'] = $variables['order_addresses_billing_address'];
+  }
+
   // Generate tokens to use as template variables.
   $token_info = token_info();
 
@@ -1880,12 +1853,7 @@ function uc_addresses_preprocess_uc_order(&$variables) {
         $types = array(
           'uc_addresses' => $address,
         );
-        // Generate tokens.
         $replacements[$address_type] = token_generate('uc_addresses', drupal_map_assoc(array_keys($token_info['tokens']['uc_addresses'])), $types);
-        // Overwrite address labels.
-        $address_label = uc_addresses_format_address($address, 'order_view');
-        $variables['order_' . $address_type . '_address'] = $address_label;
-        $variables[$address_type . '_address'] = $address_label;
       }
     }
   }
@@ -1897,23 +1865,6 @@ function uc_addresses_preprocess_uc_order(&$variables) {
       $key = str_replace(':', '_', $key);
       $variables[$key] = $value;
     }
-  }
-}
-
-/**
- * Preprocess variables for Ubercart Packing slips.
- *
- * Order variables are preprocessed in the same way as for Ubercart invoices.
- *
- * @param array $variables
- *   Variables for in the uc_packing_slip template.
- *
- * @return void
- * @see uc_addresses_preprocess_uc_order()
- */
-function uc_addresses_preprocess_uc_packing_slip(&$variables) {
-  if ($variables['order']) {
-    uc_addresses_preprocess_uc_order($variables);
   }
 }
 

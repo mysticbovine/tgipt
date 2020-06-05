@@ -36,11 +36,13 @@ function webform_mailchimp_webform_submission_insert($node, $submission) {
   global $user;
   $mailchimp_lists = array();
   $email_address = '';
+  $double_opt_in = FALSE;
 
   if (!empty($node->webform['components'])) {
     foreach ($node->webform['components'] as $key => $field) {
       if ($field['type'] == 'mailchimp') {
         $mailchimp_lists[] = $field['extra']['mailchimp_list'];
+        $double_opt_in = !empty($field['extra']['doublein']);
         // Need to know if we should look for our own email field or another.
         if ($field['extra']['use_existing_email_field'] != 'mailchimp_field') {
           if (!empty($submission->data[$key][0])) {
@@ -101,7 +103,11 @@ function webform_mailchimp_webform_submission_insert($node, $submission) {
         if (!empty($mergefields_key_array[$field['form_key']])) {
           // This is probably a bit to easy... The delta value is not taken
           // into account.
-          $mergefields_replacements[$mergefields_key_array[$field['form_key']]] = $submission->data[$key][0];
+          $value = 0;
+          if (isset($submission->data[$key][0])) {
+            $value = $submission->data[$key][0];
+          }
+          $mergefields_replacements[$mergefields_key_array[$field['form_key']]] = $value;
         }
       }
     }
@@ -126,11 +132,9 @@ function webform_mailchimp_webform_submission_insert($node, $submission) {
         }
       }
       foreach ($groupfields_replacements as $groupname => $values_array) {
-        //$mergefields_replacements['GROUPINGS'][] = array(
-		 $mergefields_replacements['groupings'][] = array(
+        $mergefields_replacements['GROUPINGS'][] = array(
           'name' => $groupname,
-          //'groups' => implode(',', $values_array),
-		  'groups' => $values_array,
+          'groups' => implode(',', $values_array),
         );
       }
     }
@@ -138,21 +142,56 @@ function webform_mailchimp_webform_submission_insert($node, $submission) {
     // If we have an email address and a list is set, try to subscribe the user.
     if ($email_address != '' && !empty($mailchimp_lists)) {
       $q = mailchimp_get_api_object();
-      if ($q) {
-        foreach ($mailchimp_lists as $mailchimp_list) {
-          //$success = $q->listSubscribe($mailchimp_list, $email_address, $mergefields_replacements, 'html', FALSE, TRUE);
-		  $success = $q->lists->subscribe($mailchimp_list, array('email' => $email_address), $mergefields_replacements, 'html', FALSE, TRUE);
+      if (!$q) {
+        watchdog('webform_mailchimp', 'Could not get the Mailchimp API object.', array(), WATCHDOG_ERROR);
+        return;
+      }
+      foreach ($mailchimp_lists as $mailchimp_list) {
+        $use_v2_api = method_exists($q, 'listSubscribe');
+        if ($use_v2_api) {
+          $success = $q->listSubscribe($mailchimp_list, $email_address, $mergefields_replacements, 'html', $double_opt_in, TRUE);
           if ($success) {
-            watchdog('webform_mailchimp', 'E-mail subscribed: %email', array('%email' => $email_address), WATCHDOG_INFO);
+            webform_mailchimp_log_subscription($email_address, $success);
           }
           else {
-            watchdog('webform_mailchimp', 'E-mail not subscribed: %email Error: %error_code <br> %error_message', array('%email' => $email_address, '%error_message' => $q->errorMessage, '%error_code' => $q->errorCode), WATCHDOG_ERROR);
+            webform_mailchimp_log_subscription($email_address, $success, $success->errorCode, $success->errorMessage);
           }
         }
-      }
-      else {
-        watchdog('webform_mailchimp', 'Could not get the Mailchimp API object.', array(), WATCHDOG_ERROR);
+        else {
+          mailchimp_subscribe($mailchimp_list, $email_address, $mergefields_replacements, $groupfields_replacements, $double_opt_in);
+          webform_mailchimp_log_subscription($email_address, TRUE);
+        }
       }
     }
+  }
+}
+
+/**
+ * Log a subscription status to the watchdog table.
+ *
+ * @param string $email_address
+ *   The email address.
+ * @param bool $status
+ *   If the subscription was successful.
+ * @param string $error_code
+ *   The error code if there was an error.
+ * @param string $error_message
+ *   The error message.
+ */
+function webform_mailchimp_log_subscription($email_address, $status, $error_code = '', $error_message = '') {
+  if ($status) {
+    watchdog('webform_mailchimp', 'E-mail subscribed: %email', array('%email' => $email_address), WATCHDOG_INFO);
+  }
+  else {
+    watchdog(
+      'webform_mailchimp',
+      'E-mail not subscribed: %email Error: %error_code <br> %error_message',
+      array(
+        '%email' => $email_address,
+        '%error_message' => $error_message,
+        '%error_code' => $error_code,
+      ),
+      WATCHDOG_ERROR
+    );
   }
 }

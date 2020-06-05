@@ -69,9 +69,8 @@ class UcAddressesUcZoneFieldHandler extends UcAddressesUcFieldHandler {
    * Implements UcAddressesFieldHandler::getFormField().
    */
   public function getFormField($form, $form_values) {
-    $address = $this->getAddress();
     $fieldName = $this->getFieldName();
-    $fieldValue = $address->getField($fieldName);
+    $fieldValue = $this->getAddress()->getField($fieldName);
     $default = (isset($form_values[$fieldName])) ? $form_values[$fieldName] : $fieldValue;
     $country_id = (isset($form_values['country'])) ? $form_values['country'] : $this->getAddress()->getField('country');
 
@@ -103,15 +102,8 @@ class UcAddressesUcZoneFieldHandler extends UcAddressesUcFieldHandler {
     }
 
     if (empty($form['#key_prefix'])) {
-      if ($address instanceof UcAddressesAddress) {
-        // When no key prefix is set, use the address ID as part of the zone wrapper ID.
-        $zone_wrapper_id = 'uc-address' . $address->getId() . '-zone-wrapper';
-      }
-      else {
-        // When no instance of UcAddressesAddress is given, we have no unique
-        // value to create a wrapper for.
-        $zone_wrapper_id = 'uc-address-zone-wrapper';
-      }
+      // When no key prefix is set, use the address ID as part of the zone wrapper ID.
+      $zone_wrapper_id = 'uc-address' . $this->getAddress()->getId() . '-zone-wrapper';
     }
     else {
       // When a key prefix is set, make this part of the zone wrapper ID.
@@ -266,9 +258,8 @@ class UcAddressesUcCountryFieldHandler extends UcAddressesUcFieldHandler {
    * Implements UcAddressesFieldHandler::getFormField().
    */
   public function getFormField($form, $form_values) {
-    $address = $this->getAddress();
     $fieldName = $this->getFieldName();
-    $fieldValue = $address->getField($fieldName);
+    $fieldValue = $this->getAddress()->getField($fieldName);
     $default = (isset($form_values[$fieldName])) ? $form_values[$fieldName] : $fieldValue;
 
     $result = db_select('uc_countries')
@@ -293,15 +284,8 @@ class UcAddressesUcCountryFieldHandler extends UcAddressesUcFieldHandler {
     }
 
     if (empty($form['#key_prefix'])) {
-      if ($address instanceof UcAddressesAddress) {
-        // When no key prefix is set, use the address ID as part of the zone wrapper ID.
-        $zone_wrapper_id = 'uc-address' . $address->getId() . '-zone-wrapper';
-      }
-      else {
-        // When no instance of UcAddressesAddress is given, we have no unique
-        // value to create a wrapper for.
-        $zone_wrapper_id = 'uc-address-zone-wrapper';
-      }
+      // When no key prefix is set, use the address ID as part of the zone wrapper ID.
+      $zone_wrapper_id = 'uc-address' . $this->getAddress()->getId() . '-zone-wrapper';
     }
     else {
       // When a key prefix is set, make this part of the zone wrapper ID.
@@ -323,7 +307,7 @@ class UcAddressesUcCountryFieldHandler extends UcAddressesUcFieldHandler {
           ),
         ),
         '#element_validate' => array('uc_addresses_validate_address_field_country'),
-        '#key_prefix' => empty($form['#key_prefix']) ? '' : $form['#key_prefix'],
+        '#key_prefix' => $form['#key_prefix'],
       ),
     );
   }
@@ -414,13 +398,11 @@ class UcAddressesUcCountryFieldHandler extends UcAddressesUcFieldHandler {
       case 'country_code2_if':
         $format = 'country_iso_code_2';
         break;
-
       case 'country_code3':
       case 'country_code3_if':
         $format = 'country_iso_code_3';
         break;
     }
-
     switch ($format) {
       case 'country_name':
       case 'country_iso_code_2':
@@ -507,11 +489,9 @@ class UcAddressesUcCountryFieldHandler extends UcAddressesUcFieldHandler {
       case 'country_name':
       case 'country_name_if':
         return t($country->country_name);
-
       case 'country_code2':
       case 'country_code2_if':
         return $country->country_iso_code_2;
-
       case 'country_code3':
       case 'country_code3_if':
         return $country->country_iso_code_3;

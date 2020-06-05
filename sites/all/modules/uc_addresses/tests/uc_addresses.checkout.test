@@ -24,10 +24,10 @@ class UcAddressesCartCheckoutTestCase extends UbercartCartCheckoutTestCase {
   }
 
   /**
-   * Setup modules.
+   * Setup modules
    */
-  public function setUp($modules = array(), $permissions = array()) {
-    parent::setUp($modules, $permissions);
+  public function setUp() {
+    parent::setUp();
 
     // Install Ubercart Addresses and flush schema cache.
     module_enable(array('ctools', 'uc_addresses'));
@@ -341,7 +341,7 @@ class UcAddressesCartCheckoutTestCase extends UbercartCartCheckoutTestCase {
     // And checkout.
     $this->drupalPost(NULL, $edit, t('Review order'));
     $messages = uc_cart_uc_message();
-    $this->assertRaw($messages['review_instructions']);
+    $this->assertText($messages['review_instructions']);
     $this->drupalPost(NULL, array(), t('Submit order'));
 
     // Check if any new addresses got saved.
@@ -351,7 +351,6 @@ class UcAddressesCartCheckoutTestCase extends UbercartCartCheckoutTestCase {
         case 'delivery':
           $message = t('The delivery address is correctly saved to the database.');
           break;
-
         case 'billing':
           $message = t('The billing address is correctly saved to the database.');
           break;
@@ -428,7 +427,7 @@ class UcAddressesCartCheckoutTestCase extends UbercartCartCheckoutTestCase {
     $this->drupalPost('cart', array(), 'Checkout');
     $this->drupalPost(NULL, $edit, t('Review order'));
     $messages = uc_cart_uc_message();
-    $this->assertRaw($messages['review_instructions']);
+    $this->assertText($messages['review_instructions']);
     $this->drupalPost(NULL, array(), t('Submit order'));
     $query = db_select('uc_addresses');
     $query->addExpression('COUNT(aid)');
@@ -539,7 +538,7 @@ class UcAddressesCartCheckoutTestCase extends UbercartCartCheckoutTestCase {
     $edit['panes[billing][address][billing_last_name]'] = 'custom last name';
     $this->drupalPost(NULL, $edit, t('Review order'));
     $messages = uc_cart_uc_message();
-    $this->assertRaw($messages['review_instructions']);
+    $this->assertText($messages['review_instructions']);
     $this->drupalPost(NULL, array(), t('Submit order'));
 
     // Check if any new addresses got saved.
@@ -554,7 +553,6 @@ class UcAddressesCartCheckoutTestCase extends UbercartCartCheckoutTestCase {
         case 'delivery':
           $message = t('The delivery address is correctly saved to the database.');
           break;
-
         case 'billing':
           $message = t('The billing address is correctly saved to the database.');
           break;
@@ -609,32 +607,5 @@ class UcAddressesCartCheckoutTestCase extends UbercartCartCheckoutTestCase {
       'delivery_first_name' => $edit['panes[billing][address][billing_first_name]'],
     );
     $order = $this->checkExistingOrder($conditions);
-  }
-
-  /**
-   * Tests if a customer can checkout when not providing a mail address.
-   */
-  function testAnonymousCheckoutWithoutMailAddress() {
-    // Disable the Customer information pane.
-    variable_set('uc_pane_customer_enabled', FALSE);
-
-    // Place item in cart.
-    $this->drupalPost('node/' . $this->product->nid, array(), t('Add to cart'));
-    // Continue to checkout.
-    $this->drupalPost('cart', array(), 'Checkout');
-
-    // Populate checkout form, but omit filling mail address.
-    $edit = $this->populateCheckoutForm();
-    unset($edit['panes[customer][primary_email]']);
-    // And checkout.
-    $this->drupalPost(NULL, $edit, t('Review order'));
-    $this->assertRaw(t('Your order is almost complete.'));
-    $this->drupalPost(NULL, array(), t('Submit order'));
-
-    // Check if an order has been created.
-    $conditions = array(
-      'delivery_first_name' => $edit['panes[delivery][address][delivery_first_name]'],
-    );
-    return $this->checkExistingOrder($conditions);
   }
 }

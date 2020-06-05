@@ -113,21 +113,18 @@ class FeedsUcAddressesProcessor extends FeedsProcessor {
       case 'aid':
         // Don't set.
         return;
-
       case 'user_name':
         $user = user_load_by_name($value);
         if ($user) {
           $target_address->setOwner($user->uid);
         }
         return;
-
       case 'user_mail':
         $user = user_load_by_mail($value);
         if ($user) {
           $target_address->setOwner($user->uid);
         }
         return;
-
       case 'uid':
         $target_address->setOwner($value);
         return;
@@ -186,11 +183,6 @@ class FeedsUcAddressesProcessor extends FeedsProcessor {
 
     // Set unique targets.
     $targets['aid']['optional_unique'] = TRUE;
-
-    // Allow other modules to modify targets.
-    if (method_exists($this, 'getHookTargets')) {
-      $this->getHookTargets($targets);
-    }
 
     return $targets;
   }

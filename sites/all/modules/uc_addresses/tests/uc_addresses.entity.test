@@ -19,7 +19,7 @@ class UcAddressesEntityCase extends UcAddressesTestCase {
       'name' => 'Ubercart Addresses entity tests',
       'description' => 'Test the Ubercart Addresses entity integration.',
       'group' => 'Ubercart Addresses',
-      'dependencies' => array('ctools', 'token', 'uc_store', 'uc_order', 'entity'),
+      'dependencies' => array('ctools', 'token', 'uc_store', 'entity'),
     );
   }
 
@@ -29,7 +29,7 @@ class UcAddressesEntityCase extends UcAddressesTestCase {
   public function setUp() {
     parent::setUp();
     // Enable Entity API module.
-    module_enable(array('entity', 'uc_addresses_test', 'uc_order'));
+    module_enable(array('entity', 'uc_addresses_test'));
   }
 
   /**
@@ -228,127 +228,6 @@ class UcAddressesEntityCase extends UcAddressesTestCase {
   }
 
   /**
-   * Tests getting uc_addresses property on an address.
-   *
-   * @covers uc_addresses_field_get()
-   */
-  public function testUcAddressesPropertyGet() {
-    $city = self::randomName();
-
-    // Create a new address.
-    $address = UcAddressesAddressBook::newAddress();
-    $address->setField('city', $city);
-
-    // Assert that properties can be get using the Entity API's metadata wrapper.
-    $address_wrapper = entity_metadata_wrapper('uc_addresses', $address);
-    $this->assertEqual($city, $address_wrapper->city->raw());
-  }
-
-  /**
-   * Tests setting uc_addresses property on an address.
-   *
-   * @covers uc_addresses_field_set()
-   */
-  public function testUcAddressesPropertySet() {
-    $city = self::randomName();
-
-    // Create a new address.
-    $address = UcAddressesAddressBook::newAddress();
-
-    // Set a property using the Entity API's metadata wrapper.
-    $address_wrapper = entity_metadata_wrapper('uc_addresses', $address);
-    $address_wrapper->city->set($city);
-
-    // Assert that the property was set.
-    $this->assertEqual($city, $address->getField('city'));
-  }
-
-  /**
-   * Tests getting uc_addresses properties on an user.
-   *
-   * @covers uc_addresses_user_address_property_get()
-   */
-  public function testUserPropertyGet() {
-    $shipping_city = self::randomName();
-    $billing_city = self::randomName();
-
-    $account = $this->drupalCreateUser();
-
-    // Create default addresses for this user.
-    $addressBook = $this->UcAddressesGetAddressBook($account->uid);
-
-    // Create default shipping address.
-    $shipping_address = $addressBook->addAddress();
-    $shipping_address->setField('city', $shipping_city);
-    $addressBook->setAddressAsDefault($shipping_address, 'shipping');
-    $shipping_address->save();
-
-    // Create default billing address.
-    $billing_address = $addressBook->addAddress();
-    $billing_address->setField('city', $billing_city);
-    $addressBook->setAddressAsDefault($billing_address, 'billing');
-    $billing_address->save();
-
-    // Reset the address book so no addresses are loaded in memory.
-    $addressBook->reset();
-
-    // Assert that properties can be get using the Entity API's metadata wrapper.
-    $user_wrapper = entity_metadata_wrapper('user', $account);
-    $this->assertEqual($shipping_city, $user_wrapper->uc_addresses_default_shipping_address->city->raw());
-    $this->assertEqual($billing_city, $user_wrapper->uc_addresses_default_billing_address->city->raw());
-    $this->assertTrue($user_wrapper->uc_addresses_default_shipping_address->raw() instanceof UcAddressesAddress);
-    $this->assertTrue($user_wrapper->uc_addresses_default_billing_address->raw() instanceof UcAddressesAddress);
-  }
-
-  /**
-   * Tests getting uc_addreses properties on a new uc_order.
-   *
-   * @covers uc_addresses_uc_order_address_property_get()
-   */
-  public function testNewUcOrderPropertyGet() {
-    $delivery_city = self::randomName();
-    $billing_city = self::randomName();
-
-    // Create a new order without saving.
-    $order = new UcOrder();
-    $order->delivery_city = $delivery_city;
-    $order->billing_city = $billing_city;
-
-    // Assert that properties can be get using the Entity API's metadata wrapper.
-    $order_wrapper = entity_metadata_wrapper('uc_order', $order);
-    $this->assertEqual($delivery_city, $order_wrapper->uc_addresses_delivery_address->city->raw());
-    $this->assertEqual($billing_city, $order_wrapper->uc_addresses_billing_address->city->raw());
-    $this->assertTrue($order_wrapper->uc_addresses_delivery_address->raw() instanceof UcAddressesAddress);
-    $this->assertTrue($order_wrapper->uc_addresses_billing_address->raw() instanceof UcAddressesAddress);
-  }
-
-  /**
-   * Tests getting uc_addreses properties on an existing uc_order.
-   *
-   * @covers uc_addresses_uc_order_address_property_get()
-   */
-  public function testExistingUcOrderPropertyGet() {
-    $delivery_city = self::randomName();
-    $billing_city = self::randomName();
-
-    // Create a new order manually and save into the database.
-    $order_new = new UcOrder();
-    $order_new->delivery_city = $delivery_city;
-    $order_new->billing_city = $billing_city;
-    drupal_write_record('uc_orders', $order_new);
-
-    // Load this order.
-    $order = uc_order_load($order_new->order_id);
-
-    // Assert that properties can be get using the Entity API's metadata wrapper.
-    $order_wrapper = entity_metadata_wrapper('uc_order', $order);
-    $this->assertEqual($delivery_city, $order_wrapper->uc_addresses_delivery_address->city->raw());
-    $this->assertEqual($billing_city, $order_wrapper->uc_addresses_billing_address->city->raw());
-    $this->assertTrue($order_wrapper->uc_addresses_delivery_address->raw() instanceof UcAddressesAddress);
-    $this->assertTrue($order_wrapper->uc_addresses_billing_address->raw() instanceof UcAddressesAddress);
-  }
-
-  /**
    * Does basic tests for viewing, editing and deleting own addresses.
    *
    * @param object $account
@@ -523,7 +402,6 @@ class UcAddressesEntityCase extends UcAddressesTestCase {
           // The entity property for the 'uid' field is called 'user'.
           $property = 'user';
           break;
-
         default:
           // All other entity property names are equal to the field name.
           $property = $field;

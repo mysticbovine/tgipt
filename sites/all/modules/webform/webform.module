@@ -70,10 +70,10 @@ function webform_help($section = 'admin/help#webform', $arg = NULL) {
       </ul>
       <p>Help on adding and configuring the components will be shown after you add your first component.</p>
       ", array(
-        '!webform-types-message' => $types_message,
-        '!create-content' => url('node/add'),
-        '!types' => $types,
-      )
+          '!webform-types-message' => $types_message,
+          '!create-content' => url('node/add'),
+          '!types' => $types,
+        )
       );
       break;
 
@@ -475,8 +475,8 @@ function webform_menu_load($nid) {
  */
 function webform_menu_to_arg($arg, array $map, $index) {
   return function_exists('webform_localization_webform_menu_to_arg')
-          ? webform_localization_webform_menu_to_arg($arg, $map, $index)
-          : $arg;
+    ? webform_localization_webform_menu_to_arg($arg, $map, $index)
+    : $arg;
 }
 
 /**
@@ -657,13 +657,13 @@ function webform_submission_access($node, $submission, $op = 'view', $account = 
     case 'edit':
     case 'delete':
       return $module_access || (
-        $general_access && (
-          user_access($op . ' all webform submissions', $account) || (
-            user_access($op . ' own webform submissions', $account) &&
-            $account->uid == $submission->uid
+          $general_access && (
+            user_access($op . ' all webform submissions', $account) || (
+              user_access($op . ' own webform submissions', $account) &&
+              $account->uid == $submission->uid
+            )
           )
-        )
-      );
+        );
 
     case 'list':
       return $module_access ||
@@ -729,8 +729,8 @@ function webform_node_update_access($node, $account = NULL) {
   $account = isset($account) ? $account : $user;
   $module_access = module_invoke_all('webform_update_access', $node, $account);
   return empty($module_access)
-            ? node_access('update', $node, $account) && user_access('edit webform components')
-            : count(array_filter($module_access)) == count($module_access);
+    ? node_access('update', $node, $account) && user_access('edit webform components')
+    : count(array_filter($module_access)) == count($module_access);
 }
 
 /**
@@ -2090,15 +2090,15 @@ function webform_node_view($node, $view_mode) {
   // Print out messages for the webform.
   if (empty($node->in_preview) && !isset($node->webform_block) && !$logging_in) {
     theme('webform_view_messages', array(
-      'node' => $node,
-      'page' => $page,
-      'submission_count' => $submission_count,
-      'user_limit_exceeded' => $user_limit_exceeded,
-      'total_limit_exceeded' => $total_limit_exceeded,
-      'allowed_roles' => $allowed_roles,
-      'closed' => $closed,
-      'cached' => $cached,
-    )
+        'node' => $node,
+        'page' => $page,
+        'submission_count' => $submission_count,
+        'user_limit_exceeded' => $user_limit_exceeded,
+        'total_limit_exceeded' => $total_limit_exceeded,
+        'allowed_roles' => $allowed_roles,
+        'closed' => $closed,
+        'cached' => $cached,
+      )
     );
   }
 
@@ -2356,16 +2356,16 @@ function webform_block_view($delta = '') {
     elseif (strlen(trim(strip_tags($node->webform['confirmation'])))) {
       // Display confirmation link drupal status messages, but in the block.
       $message = webform_replace_tokens($node->webform['confirmation'],
-                                        $node,
-                                        webform_get_submission($nid, $_SESSION['webform_confirmation'][$nid]['confirmation_page']),
-                                        NULL,
-                                        $node->webform['confirmation_format']);
+        $node,
+        webform_get_submission($nid, $_SESSION['webform_confirmation'][$nid]['confirmation_page']),
+        NULL,
+        $node->webform['confirmation_format']);
       $content = array(
         'confirmation_message' => array(
           '#markup' => "<div class=\"messages status webform-confirmation\">\n" .
-          '<h2 class="element-invisible">' . t('Status message') . "</h2>\n" .
-          $message .
-          "</div>\n",
+            '<h2 class="element-invisible">' . t('Status message') . "</h2>\n" .
+            $message .
+            "</div>\n",
           '#weight' => -1,
         ),
         'webform_view' => $content,
@@ -2515,8 +2515,8 @@ function webform_client_form($form, &$form_state, $node, $submission = FALSE, $r
 
   $finished = isset($submission->is_draft) ? (!$submission->is_draft) : 0;
   $submit_button_text = $finished
-                          ? t('Save')
-                          : (empty($node->webform['submit_text']) ? t('Submit') : t($node->webform['submit_text']));
+    ? t('Save')
+    : (empty($node->webform['submit_text']) ? t('Submit') : t($node->webform['submit_text']));
 
   // Bind arguments to $form to make them available in theming and form_alter.
   $form['#node'] = $node;
@@ -2984,9 +2984,9 @@ function webform_client_form_prevalidate($form, &$form_state) {
   // Another way to consider this is that the form is open when its status is
   // open OR there is a submission and the user is an admin.
   $closed = empty($node->webform['status']) && (
-    empty($form['#submission']) ||
-    !user_access('edit all webform submissions')
-  );
+      empty($form['#submission']) ||
+      !user_access('edit all webform submissions')
+    );
 
   // Prevent submission by throwing an error.
   if ((!$allowed_role || $total_limit_exceeded || $user_limit_exceeded || $closed)) {
@@ -3205,10 +3205,10 @@ function webform_client_form_postvalidate(&$form, &$form_state) {
   $nid = $form_state['values']['details']['nid'];
   $node = node_load($nid);
   if (user_is_logged_in() &&
-      $errors && !array_key_exists('', $errors) &&
-      $node->webform['auto_save'] &&
-      !$form_state['values']['details']['finished'] &&
-      !empty($form_state['values']['op'])) {
+    $errors && !array_key_exists('', $errors) &&
+    $node->webform['auto_save'] &&
+    !$form_state['values']['details']['finished'] &&
+    !empty($form_state['values']['op'])) {
     // Validation errors are present, prevalidation succeeded (for example
     // submission limits are ok), auto-save is enabled, this form isn't finished
     // (this is, is or soon will be a draft) and a button was pushed (not ajax).
@@ -3600,8 +3600,8 @@ function template_preprocess_webform_confirmation(&$vars) {
 
   // URL back to form (or same page for in-block confirmations).
   $vars['url'] = empty($node->webform_block)
-                    ? url('node/' . $node->nid)
-                    : url(current_path(), array('query' => drupal_get_query_parameters()));
+    ? url('node/' . $node->nid)
+    : url(current_path(), array('query' => drupal_get_query_parameters()));
 
   // Progress bar.
   $vars['progressbar'] = '';
@@ -4537,10 +4537,10 @@ function _webform_safe_name($name) {
 function _webform_transliterate($name) {
   // If transliteration is available, use it to convert names to ASCII.
   return function_exists('transliteration_get')
-            ? transliteration_get($name, '')
-            : str_replace(array('€', 'ƒ', 'Š', 'Ž', 'š', 'ž', 'Ÿ', '¢', '¥', 'µ', 'À', 'Á', 'Â', 'Ã', 'Ä', 'Å', 'Ç', 'È', 'É', 'Ê', 'Ë', 'Ì', 'Í', 'Î', 'Ï', 'Ñ', 'Ò', 'Ó', 'Ô', 'Õ', 'Ö', 'Ø', 'Ù', 'Ú', 'Û', 'Ü', 'Ý', 'à', 'á', 'â', 'ã', 'ä', 'å', 'ç', 'è', 'é', 'ê', 'ë', 'ì', 'í', 'î', 'ï', 'ñ', 'ò', 'ó', 'ô', 'õ', 'ö', 'ø', 'ù', 'ú', 'û', 'ü', 'ý', 'ÿ', 'Œ', 'œ', 'Æ', 'Ð', 'Þ', 'ß', 'æ', 'ð', 'þ'),
-                          array('E', 'f', 'S', 'Z', 's', 'z', 'Y', 'c', 'Y', 'u', 'A', 'A', 'A', 'A', 'A', 'A', 'C', 'E', 'E', 'E', 'E', 'I', 'I', 'I', 'I', 'N', 'O', 'O', 'O', 'O', 'O', 'O', 'U', 'U', 'U', 'U', 'Y', 'a', 'a', 'a', 'a', 'a', 'a', 'c', 'e', 'e', 'e', 'e', 'i', 'i', 'i', 'i', 'n', 'o', 'o', 'o', 'o', 'o', 'o', 'u', 'u', 'u', 'u', 'y', 'y', 'OE', 'oe', 'AE', 'DH', 'TH', 'ss', 'ae', 'dh', 'th'),
-                          $name);
+    ? transliteration_get($name, '')
+    : str_replace(array('€', 'ƒ', 'Š', 'Ž', 'š', 'ž', 'Ÿ', '¢', '¥', 'µ', 'À', 'Á', 'Â', 'Ã', 'Ä', 'Å', 'Ç', 'È', 'É', 'Ê', 'Ë', 'Ì', 'Í', 'Î', 'Ï', 'Ñ', 'Ò', 'Ó', 'Ô', 'Õ', 'Ö', 'Ø', 'Ù', 'Ú', 'Û', 'Ü', 'Ý', 'à', 'á', 'â', 'ã', 'ä', 'å', 'ç', 'è', 'é', 'ê', 'ë', 'ì', 'í', 'î', 'ï', 'ñ', 'ò', 'ó', 'ô', 'õ', 'ö', 'ø', 'ù', 'ú', 'û', 'ü', 'ý', 'ÿ', 'Œ', 'œ', 'Æ', 'Ð', 'Þ', 'ß', 'æ', 'ð', 'þ'),
+      array('E', 'f', 'S', 'Z', 's', 'z', 'Y', 'c', 'Y', 'u', 'A', 'A', 'A', 'A', 'A', 'A', 'C', 'E', 'E', 'E', 'E', 'I', 'I', 'I', 'I', 'N', 'O', 'O', 'O', 'O', 'O', 'O', 'U', 'U', 'U', 'U', 'Y', 'a', 'a', 'a', 'a', 'a', 'a', 'c', 'e', 'e', 'e', 'e', 'i', 'i', 'i', 'i', 'n', 'o', 'o', 'o', 'o', 'o', 'o', 'u', 'u', 'u', 'u', 'y', 'y', 'OE', 'oe', 'AE', 'DH', 'TH', 'ss', 'ae', 'dh', 'th'),
+      $name);
 }
 
 /**
@@ -5026,8 +5026,8 @@ function webform_set_breadcrumb($node, $submission = NULL) {
     $active_trail = menu_get_active_trail();
     $last_active = end($active_trail);
     $breadcrumb[] = $last_active['href'] === $node_path && !empty($last_active['in_active_trail'])
-                      ? l($last_active['title'], $node_path, $last_active['localized_options'])
-                      : l($node->title, $node_path);
+      ? l($last_active['title'], $node_path, $last_active['localized_options'])
+      : l($node->title, $node_path);
 
     // Setting the current menu href will cause the submission title and current
     // tab (if not the default tab) to be added to the active path when the
@@ -5455,9 +5455,9 @@ function webform_input_vars_check(array &$form, array $form_state, $detect_key, 
       '@limit' => (int) ini_get('max_input_vars'),
     );
     drupal_set_message(user_access('administer site configuration')
-                          ? t('This form could not be submitted because $_POST was truncated to @count input vars.  PHP max_input_vars is @limit and needs to be increased.', $subs)
-                          : t('This form could not be submitted because it exceeds the server configuration. Contact the administrator.'),
-                      'error');
+      ? t('This form could not be submitted because $_POST was truncated to @count input vars.  PHP max_input_vars is @limit and needs to be increased.', $subs)
+      : t('This form could not be submitted because it exceeds the server configuration. Contact the administrator.'),
+      'error');
     watchdog('webform',
       'POST truncated to @count input vars. PHP max_input_vars is @limit. Increase max_input_vars.',
       $subs,
@@ -5486,10 +5486,10 @@ function webform_pre_render_input_vars($element) {
       );
       $warning = array(
         '#markup' => '<div class="messages warning">' .
-        (user_access('administer site configuration')
-          ? t('This form contains @count input elements. PHP max_input_vars is @limit and should be increased.', $subs)
-          : t('This form may be too long to work properly. Contact the administrator.'))
-        . '</div>',
+          (user_access('administer site configuration')
+            ? t('This form contains @count input elements. PHP max_input_vars is @limit and should be increased.', $subs)
+            : t('This form may be too long to work properly. Contact the administrator.'))
+          . '</div>',
         '#weight' => -1,
       );
       if ($element['#input_var_waring_parent']) {
@@ -5570,25 +5570,4 @@ function webform_count_terminals($a) {
       return $carry + webform_count_terminals($item);
     }, 0)
     : 1;
-}
-
-/**
- *
- * Function for backward module compatibility().
- * https://www.drupal.org/project/uc_webform_pane/issues/2323005
- *
- */
-function webform_client_form_includes($form, $form_state) {
-  $components = webform_components();
-  foreach ($components as $component_type => $component) {
-    webform_component_include($component_type);
-  }
-
-  // Add the post validation to end of validators. Do this first on the off
-  // chance that an _alter function has unset form['#validate'].
-  //$form['#validate'][] = 'webform_client_form_postvalidate';
-  // Add the pre-validator to the front of the list to run first
-  //array_unshift($form['#validate'], 'webform_client_form_prevalidate');
-
-  return $form;
 }

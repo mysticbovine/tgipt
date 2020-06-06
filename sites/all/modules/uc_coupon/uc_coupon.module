@@ -459,7 +459,7 @@ function uc_coupon_session_add($code, $op = 'submit') {
  * @param $is_update
  * 		TRUE (the default) if removing this code represents an update of the session; that is, if the code
  *		was previously validated. FALSE otherwise (e.g. for removal of automatic discounts).  Ignored if
- *		a specific code is not specified.		
+ *		a specific code is not specified.
  */
 function uc_coupon_session_clear($code = NULL) {
   if (isset($code)) {
@@ -1656,7 +1656,6 @@ function _uc_coupon_cart_item($coupon) {
     'nid' => 0,
     'qty' => 1,
     'price' => -$coupon->amount,
-	'cost' => 0,
     'data' => array('module' => 'uc_coupon', 'shippable' => FALSE, 'code' => $coupon->code, 'remove' => uc_coupon_session_get($coupon->code)),
     'model' => 0,
     'weight' => 0
@@ -1817,7 +1816,7 @@ function template_preprocess_uc_coupon_certificate(&$variables) {
       }
     }
   }
-  
+
   if (isset($variables['coupon']->data['base_cid'])) {
     $variables['theme_hook_suggestions'][] = 'uc_coupon_certificate__base_' . $variables['coupon']->data['base_cid'];
   }

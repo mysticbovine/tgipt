@@ -166,7 +166,6 @@ function instagram_social_feed_cron() {
     $table = 'instagram_social_feed_photos';
     if (!isset($instagram_feed->data)) {
       // Ensure foreach will not loop but also will not emit a warning.
-	  if (!isset($instagram_feed)) $instagram_feed = new stdClass();
       $instagram_feed->data = array();
     }
 

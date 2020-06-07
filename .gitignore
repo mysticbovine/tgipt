@@ -36,6 +36,8 @@ sites/all/themes/README.txt
 # /scripts
 # /themes
 
+.idea
+/tmp
 *.gz
 *.zip
 *.tar

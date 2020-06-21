@@ -5571,3 +5571,14 @@ function webform_count_terminals($a) {
     }, 0)
     : 1;
 }
+
+/**
+ * Function for backward module compatibility.
+ */
+function webform_client_form_includes($form, $form_state) {
+  $components = webform_components();
+  foreach ($components as $component_type => $component) {
+    webform_component_include($component_type);
+  }
+  return $form;
+}

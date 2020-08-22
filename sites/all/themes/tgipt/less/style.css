@@ -422,7 +422,7 @@ sup {
   padding: 10px;
   text-align: center;
   line-height: 1.5;
-  height: 115px;
+  height: 145px;
 }
 .productdes a {
   color: #fff;
@@ -436,6 +436,7 @@ sup {
   padding: 5px 20px;
   height: 45px;
   position: relative;
+  /* NEW */
 }
 .productdes h2.nutras {
   background-color: #a4c672;
@@ -448,6 +449,27 @@ sup {
 }
 .productdes h2.cats {
   background-color: #da284a;
+}
+.productdes h2.travel {
+  background-color: #d6ca14;
+}
+.productdes h2.functional {
+  background-color: #a4c672;
+}
+.productdes h2.protein {
+  background-color: #e8c255;
+}
+.productdes h2.everyday {
+  background-color: #6dc5e9;
+}
+.productdes h2.freeze {
+  background-color: #384da1;
+}
+.productdes h2.chewy {
+  background-color: #d06428;
+}
+.productdes h2.travel {
+  background-color: #d6ca14;
 }
 .productdes h2:before {
   content: " ";

@@ -1,0 +1,9 @@
+Template file                                               Used by                 Notes
+====================================================        ======================  ===================
+views-view-field--megamenutest--title.tpl.php               Product Titles          Lowest level
+views-view-field--megamenutest--name.tpl.php                Child terms             Lowest level
+views-view-field--megamenutest--taxonomy-catalog.tpl.php    Grandchild terms        Lowest Level
+
+views-view-grouping--megamenutest.tpl.php                   Child wrap      
+views-view--megamenutest.tpl.php                            Main view        
+views-view-fields--megamenutest.tpl.php                     Products                wraps around proudct titles

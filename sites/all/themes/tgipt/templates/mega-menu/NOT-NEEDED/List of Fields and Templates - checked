@@ -7,3 +7,13 @@ views-view-field--megamenutest--taxonomy-catalog.tpl.php    Grandchild terms    
 views-view-grouping--megamenutest.tpl.php                   Child and Grandchild      
 views-view--megamenutest.tpl.php                            Main view        
 views-view-fields--megamenutest.tpl.php                     Products                wraps around proudct titles
+
+Next Steps
+========================================================
+1. Write jQuery to add "wsshoplink-active" to all the first li.child
+2. Add fontawesome 
+3. Style the menu to match existing.
+4. How can I do the product description?
+    - view that shows the fields we want. 
+    - assign it a unique class
+    - mousing over prodduct dispalys the product description.

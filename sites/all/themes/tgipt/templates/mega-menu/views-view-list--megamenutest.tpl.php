@@ -10,7 +10,7 @@
  * @ingroup views_templates
  */
 ?>
- <div class="col-md-4 clearfix" style="border: 1px dotted yellow">
+ <div class="col-md-4 clearfix">
 <?php print $wrapper_prefix; ?>
   <?php if (!empty($title)) : ?>
 

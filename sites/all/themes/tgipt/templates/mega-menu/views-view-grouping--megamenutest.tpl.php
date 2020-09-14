@@ -25,7 +25,7 @@
     <div class="wsshoptabing wtsdepartmentmenu clearfix">
         <div class="wsshopwp clearfix">
             <ul class="wstabitem clearfix">
-                CHILD
+                
                 <?php print $content; ?>
             </ul>
         </div>
@@ -36,14 +36,10 @@
     <?php print $title; ?>
     <div class="wstitemright clearfix wstitemrightactive">
         <div class="container-fluid">
-            <div class="row" style="border:1px solid pink;">
-                <!-- WRAPS GRANDCHILD -->
+            <div class="row">
                 <?php print $content; ?>
             </div>
         </div>
     </div>
     </li>
 <?php } ?>
-<?php if($grouping_level == 2){ ?>
-    TWO??!!
-    <?php } ?>

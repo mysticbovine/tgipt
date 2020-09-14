@@ -28,5 +28,5 @@
  * <li class="wsshoplink-active"><a href="#"><i class="fas fa-female"></i> </a></li>
  */
 ?>
-<li class="wsshoplink-active">
+<li class="child">
 <?php print $output; ?>

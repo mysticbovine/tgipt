@@ -27,11 +27,15 @@ regions[page_bottom]    = 'Page bottom'
 ;;;;;;;;;;;;;;;;;;;;;
 ;; Stylesheets
 ;;;;;;;;;;;;;;;;;;;;;
+stylesheets[all][] = webslidemenu/webslidemenu.css
+stylesheets[all][] = webslidemenu/dropdown-effects/fade-down.css
+stylesheets[all][] = webslidemenu/color-skins/white-gry.css
+stylesheets[all][] = fonts/font-awesome/css/font-awesome.min.css
 stylesheets[all][] = css/style.css
-
 
 ;;;;;;;;;;;;;;;;;;;;;
 ;; Scripts
 ;;;;;;;;;;;;;;;;;;;;;
 scripts[] = js/jquery.mixitup.min.js
+scripts[] = webslidemenu/webslidemenu.js
 scripts[] = js/script.js

@@ -37,7 +37,7 @@
     <div class="wstitemright clearfix wstitemrightactive">
         <div class="container-fluid">
             <div class="row" style="border:1px solid pink;">
-                GRANDCHILD
+                <!-- WRAPS GRANDCHILD -->
                 <?php print $content; ?>
             </div>
         </div>

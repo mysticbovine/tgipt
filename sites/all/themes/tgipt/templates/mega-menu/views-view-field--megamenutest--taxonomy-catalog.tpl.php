@@ -24,5 +24,5 @@
  *col should go here.
  */
 ?>
-
+<div class="col-md-4 clearfix" style="border: 1px dotted red;"> </div>
 <div class="wstheading clearfix"  style="border:1px dotted green;"><?php print $output; ?></div>

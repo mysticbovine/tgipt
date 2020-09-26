@@ -196,11 +196,7 @@
 					<?php print render($page['navigation']); ?>
 				  <?php endif; ?>
 				  <!-- Mega Menu function test -->
-				
-				 
-				 	
-				
-					</ul>
+				</ul>
 				
 		  		
          
@@ -306,4 +302,3 @@
 
   </footer>
 <?php endif; ?>
-v

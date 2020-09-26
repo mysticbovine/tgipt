@@ -5,9 +5,6 @@
  * Provides general enhancements and fixes to TGIPT.
  */
 
-
-
-
 jQuery(document).ready(function($) {
 	(function ($) {
 
@@ -41,20 +38,7 @@ jQuery(document).ready(function($) {
 		  }
 		});
 		/* Add CDN */
-		// $(".uc-product-node .product-info.display-price").append("<span class='cdn'>cdn</span>");
-		// $(".page-grocery .uc-price").append("<span class='cdn'>cdn</span>");
-		/* Add MSRP to pices in grocery and retail line products */
 		var copy = "<div style='font-size: 20px; display: inline-block'> per carton.</div><div style='font-size: 20px'>($6.50 per bag wholesale. $12.99 per bag <abbr title='Manufacturers Suggested Retail Price' style=''>MSRP</abbr>)</div>";
-		/*$(	".page-grocery .display-price"	).append(" <abbr title='Manufacturers Suggested Retail Price' style='font-variant:small-caps'>msrp</abbr>"); NOT NEED FOR NOW. This is the main grocery page */
-		// $(	".page-node-157 .display-price"	).append(copy); /* JOINT SUPPORT */
-		// $(	".page-node-158 .display-price"	).append(copy); /* ANXIETY & STRESS */
-		// $(	".page-node-159 .display-price"	).append(copy); /* SKIN AND COAT */
-		// $(	".page-node-160 .display-price"	).append(copy); /* ANTIOXIDANT */
-		// $(	".page-node-161 .display-price"	).append(copy); /* ALLEGIES AND IMMUNE */
-		// $(	".page-node-162 .display-price"	).append(copy); /* DIGESTION */
-		// $(	".page-node-199 .display-price"	).append(copy); /* TRAINING */
-		// $(	".page-node-311 .display-price"	).append(copy); /* SARDINES */
-		
 	
 		$( ".page-node-157 .suffix" ).replaceWith("<div class='suffix'>%</div>"); /* JOINT SUPPORT */
 		$( ".page-node-158 .suffix" ).replaceWith("<div class='suffix'>%</div>"); /* ANXIETY & STRESS */
@@ -64,20 +48,6 @@ jQuery(document).ready(function($) {
 		$( ".page-node-162 .suffix" ).replaceWith("<div class='suffix'>%</div>"); /* DIGESTION */
 		$( ".page-node-199 .suffix" ).replaceWith("<div class='suffix'>%</div>"); /* TRAINING */
 		$( ".page-node-311 .suffix" ).replaceWith("<div class='suffix'>%</div>"); /* SARDINE */
-
-		
-
-	//	$( ".product-311" ).replaceWith('<span class="product-311">$9.99</span>'); 
-	//	$( ".retail-311" ).replaceWith('<span class="retail-311">$5.05</span>'); 
-	
-		
-		
-		// $(".product-311").function()
-		// var sardinePublic = $(".product-311").html().replace('12.99','9.99');
-		// $(".product-311").html(sardinePublic);
-		
-		// var sardineRetail = $(".retail-311").html().replace('6.50','5.05');
-		// $(".retail-311").html(sardineRetail);
 		
 		/* change freeminimum on shipping box. */
 		$(	".page-node-157 #freeminimum" ).replaceWith("$200");
@@ -110,17 +80,19 @@ jQuery(document).ready(function($) {
 		
 		}); 
 			
-			var triheight = $("h1.page-header").height();
-			if (triheight > 60) {
-				$("h1.page-header").toggleClass("twoline");
-			}
-			
-			var triheight = $(".featured h2.block-title").height();		
-			if (triheight > 60) {
-				$(".featured h2.block-title").toggleClass("twoline");
-			}
+		var triheight = $("h1.page-header").height();
+		if (triheight > 60) {
+			$("h1.page-header").toggleClass("twoline");
+		}
+		
+		var triheight = $(".featured h2.block-title").height();		
+		if (triheight > 60) {
+			$(".featured h2.block-title").toggleClass("twoline");
+		}
 	
-
+		// Mega Menu intial active menu
+		// Selects first grandchild under For Cats and For Dogs.
+		$("ul.wsmenu-list li:first-child").addClass("wsshoplink-active");
 		
 	}(jQuery));
 });

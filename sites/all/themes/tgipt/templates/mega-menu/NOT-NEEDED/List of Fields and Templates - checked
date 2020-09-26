@@ -17,3 +17,4 @@ Next Steps
     - view that shows the fields we want. 
     - assign it a unique class
     - mousing over prodduct dispalys the product description.
+    UPDATE: Added a span with a class wrapped around each product based on the NID: product-[nid].

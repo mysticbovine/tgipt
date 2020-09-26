@@ -180,8 +180,11 @@
 			</div>
 				<!-- end -->
 
-			 <div class="row">
-				<nav role="navigation" class="mainmenu">
+			 <div class="row mega">
+				<nav role="navigation" class="mainmenu wsmenu">
+				<ul class="wsmenu-list">
+					<?php print tgipt_megamenu("dog");?>
+					<?php print tgipt_megamenu("cat");?>
 				  <?php if (!empty($primary_nav)): ?>
 				  
 					<?php print render($primary_nav); ?>
@@ -192,6 +195,17 @@
 				  <?php if (!empty($page['navigation'])): ?>
 					<?php print render($page['navigation']); ?>
 				  <?php endif; ?>
+				  <!-- Mega Menu function test -->
+				
+				 
+				 	
+				
+					</ul>
+				
+		  		
+         
+				
+					  
 				</nav>
 			</div>
 			<?php endif; ?>

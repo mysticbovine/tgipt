@@ -26,4 +26,4 @@
  * 
  */
 ?>
-<li aria-haspopup="true" class="parent"><a href="#" class="navtext"><span>For</span><span><?php print $output; ?></span></a>
+<li aria-haspopup="true" class="parent"><a href="#" class="navtext"><span></span><span><?php print $output; ?></span></a>

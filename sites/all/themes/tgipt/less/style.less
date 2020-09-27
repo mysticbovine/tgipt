@@ -29,10 +29,10 @@ body.logged-in.toolbar-drawer.navbar-is-fixed-top {
 	padding-top: 238px!important;
 }
 body.logged-in.navbar-is-fixed-top {
-	padding-top: 174px!important;
+	padding-top: 100px!important;
 }
 body.not-logged-in.navbar-is-fixed-top {
-	padding-top: 174px!important;
+	padding-top: 100px!important;
 }
 
 h1, h2, h3 {
@@ -137,6 +137,61 @@ img.canadapost-logo.img-responsive {
 body.toolbar-drawer.navbar-is-fixed-top {
     padding-top: 238px!important;
 }
+.menu {
+    max-width: 950px;
+    float: right;
+}
+//Mega Menu mobile 
+#navbar .wsmobileheader {
+    background-color: @nav;
+}
+@media only screen and (max-width: 991px){
+	.wsmobileheader {
+		height: 100px;
+	}
+	.logo, .newslettersignup, .topbar {
+		display: none;
+	}
+	.wsanimated-arrow span, .wsanimated-arrow span:before, .wsanimated-arrow span:after {
+		background: @blue;
+	}
+	#navbar .wsmenu>.wsmenu-list>li>.wsshoptabing>.wsshopwp>.wstabitem>li.wsshoplink-active>a {
+		background-color: #f5f5f5;
+	}
+	#navbar .wsmenu>.wsmenu-list>li>.navtext>span+span:after{
+		display: none;
+	}
+	#navbar .wsmenu>.wsmenu-list>li>a{
+		color: #666666;
+	}
+	#navbar .wsmenu>.wsmenu-list>li.leaf a{
+		text-align: left;
+		font-size: 22px;
+	}
+	#navbar .wsmenu>.wsmenu-list>li>.navtext>span+span {
+		color: #666666;
+		font-size: 22px;
+	}
+	#navbar .wsmenu>.wsmenu-list>li>.wsshoptabing>.wsshopwp {
+		box-shadow: none;
+	}
+	.wsmenu>.wsmenu-list>li>.wsshoptabing>.wsshopwp>.wstabitem>li>a {
+		padding: 10px 11px 10px 11px;
+	}
+	#navbar .wsmenu>.wsmenu-list>li:hover>a {
+		background-color: #f5f5f5;
+		color: #000;
+	}
+	.wsmenu>.wsmenu-list>li>.wsshoptabing>.wsshopwp>.wstabitem>li>.wstitemright {
+		border-bottom-width: 2px;
+	}
+	#navbar .wsmenu>.wsmenu-list>li>a.active {
+		background-color: #f5f5f5;
+		color: #333;
+	}
+}
+
+// Hide logo and menus screens smaller than 1024
 /* Shrink */
 
 #navbar{
@@ -166,7 +221,7 @@ body.toolbar-drawer.navbar-is-fixed-top {
 	  padding: 4px 5px;
 	  margin: 8px 15px 8px 0;
 	}
-	.logo img {
+	.shrink .logo img {
 		transition: height .2s;
 		height: 140px;
 	}
@@ -207,10 +262,9 @@ body.toolbar-drawer.navbar-is-fixed-top {
 }
 .navbar-collapse.collapse, .topbar li {
 	text-align: right;
-	float: right;
 }
 .topbar li:first-child {
-    margin-right: -15px;
+    margin-left: -15px;
 }
 .navbar-default, .navbar-collapse {
 	background-color: @nav;
@@ -242,7 +296,7 @@ body.toolbar-drawer.navbar-is-fixed-top {
 	}
 	
 	.logo {
-		padding-top: 5px;
+		padding: 5px 0 0 5px;
 	}
 
 }

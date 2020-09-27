@@ -6,6 +6,7 @@ cache/
 files/
 sites/*/files
 sites/*/private
+NOT-NEEDED
 
 # Ignore default text files
 .htaccess
@@ -21,7 +22,8 @@ tmp/
 sites/all/README.txt
 sites/all/modules/README.txt
 sites/all/themes/README.txt
-*/NOT-NEEDED
+*/NOT-NEEDED/*
+*/SNIPS
 
 # Ignore everything but the "sites" folder ( for non core developer )
 # web.config

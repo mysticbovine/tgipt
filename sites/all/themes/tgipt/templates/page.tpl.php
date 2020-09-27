@@ -76,7 +76,26 @@
  */
 ?>
 <header id="navbar" role="banner" class="<?php print $navbar_classes; ?>">
-  <div class="<?php print $container_class; ?>">
+	<div class="<?php print $container_class; ?> row">
+ <!-- Mobile Header -->
+ <div class="wsmobileheader clearfix">
+				<a id="wsnavtoggle" class="wsanimated-arrow"><span></span></a>
+				<span class="smllogo">
+					<a class="" href="<?php print $front_page; ?>" title="<?php print t('Home'); ?>">
+						<img src="<?php print $logo; ?>" alt="<?php print t('Home'); ?>" class="img-responsive"/>
+					</a>
+				</span>
+				<div class="wssearch clearfix">
+				<i class="wsopensearch fas fa-search"></i>
+				<i class="wsclosesearch fas fa-times"></i>
+				<div class="wssearchform clearfix">
+					<form>
+					<input type="text" placeholder="Search Here">
+					</form>
+				</div>
+				</div>
+			</div>
+  			<!-- Mobile Header -->
 	  <div class="logo col-sm-2">
 	  	<div class="navbar-header">
 		  <?php if ($logo): ?>
@@ -98,62 +117,50 @@
 			  <span class="icon-bar"></span>
 			</button>
 		  <?php endif; ?>
+		   
 		</div>
 	  
 	  </div>
+
 	  <div class="menu col-sm-10">
 	
-		<div class="navbar-collapse collapse">
+		<div class="navbar-collapse0 collapse0">
 			<?php if (!empty($primary_nav) || !empty($secondary_nav) || !empty($page['navigation'])): ?>
 			<div class="row">
 				<div class="col-sm-12 topbar">
 					<ul class="menu nav navbar-nav">
-						<li><a href="/cart">Cart: 
-						<?php  
-							if(!isset($cid)) {$cid = NULL;}
-							$item = uc_cart_get_total_qty($cid);
-							if($item == 0) {
-								echo " 0 items";
-							} else {
-							
-								 if ($item == 1) {
-									
-									echo " $item item";
-								 } else {
-									echo "$item items";
-								 } 
-							} ?>
-						</a></li>
-					
-					
+						<li><a href="/"><i class="fa fa-home" aria-hidden="true"></i> Home</a></li>
+						<li><a href="/retailers-carrying-our-treats">Our Retailers</a></li>
+						<li><a href="/our-distributors">Our Distributors</a></li> 
+						<li><a href="/blog">Blog</a></li>
+						<li><a href="tel:+16046893647"><span class="phonenumber">Phone us: 1-604-882-7505</span></a></li>
+						
 						<?php 
 							if (user_is_logged_in()){
-								echo "<li><a href='/user/logout'>Log out</a></li>  <li><a href='/user'>View your account</a></li> ";
+								echo "<li><a href='/user/logout'>Log out</a></li>  <li><a href='/user'>Your account</a></li> ";
 							} else {
 								echo "<li><a href='/user'>Log in </a></li>  <li><a href='/user/register'>Sign up</a></li> ";	
-							}?>
-							<li><a href="tel:+16046893647"><span class="phonenumber">Phone us: 1-604-882-7505</span></a></li> 
-							<li class="last expanded dropdown hidden"><a href="/contact" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">Contact <span class="caret"></span></a>
-								<ul class="dropdown-menu">
-									<li class="first leaf"><a href="/contact" title="">Contact</a></li>
-									<li class="last leaf"><a href="/charity-community-support">Charity &amp; Community</a></li>
-								</ul>
-							</li>
-							<li><a href="/blog">Blog</a></li> 
-							<li><a href="/our-distributors">Our Distributors</a></li> 
-							<li><a href="/retailers-carrying-our-treats">Our Retailers</a></li>
-							<li class="first expanded dropdown hidden"><a href="/why-granville-island-pet-treatery" class="dropdown-toggle" data-toggle="dropdown">Why Us? <span class="caret"></span></a>
-								<ul class="dropdown-menu"><li class="first leaf"><a href="/why-granville-island-pet-treatery" title="">Why Pet Treatery?</a></li>
-									<li class="leaf"><a href="/why-pet-treatery/our-vision-mission-values">Our Vision, Mission and Values</a></li>
-									<li class="leaf"><a href="/why-pet-treatery/recipes-and-ingredients">Recipes and Ingredients</a></li>
-									<li class="leaf"><a href="/why-pet-treatery/caboose">The Caboose</a></li>
-									<li class="leaf"><a href="/about/testimonials" title="">Testimonials</a></li>
-									<li class="last leaf"><a href="/why-tgipt/faq">FAQ</a></li>
-								</ul>
-							</li>
-							<li><a href="/"><i class="fa fa-home" aria-hidden="true"></i> Home</a></li> 
+						}?>
+							 
+						
+							 
 					
-					
+							<li><a href="/cart">Cart: 
+									<?php  
+										if(!isset($cid)) {$cid = NULL;}
+										$item = uc_cart_get_total_qty($cid);
+										if($item == 0) {
+											echo " 0 items";
+										} else {										
+											if ($item == 1) {												
+												echo " $item item";
+											} else {
+												echo "$item items";
+											} 
+										} 
+									?>
+								</a>
+							</li>
 				</div>
 			</div>
 			

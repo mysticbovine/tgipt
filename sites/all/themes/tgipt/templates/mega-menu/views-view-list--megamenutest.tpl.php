@@ -10,7 +10,13 @@
  * @ingroup views_templates
  */
 ?>
- <div class="col-md-4 clearfix">
+
+<?php 
+      $remove = array(" ","&amp;");
+      $replace = array("_","");
+      $grandchild = str_replace($remove,$replace, $title); $grandchild = strip_tags($grandchild);?>
+<!--<?php print $child; ?>-->
+ <div class="col-md-4 clearfix <?php print $grandchild; ?>">
 <?php print $wrapper_prefix; ?>
   <?php if (!empty($title)) : ?>
 

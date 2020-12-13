@@ -965,27 +965,96 @@ h1.page-header {
 					color: @cat-treats;
 					&:hover {text-decoration: none; color: darken(@cat-treats, 25);}
 				}
-			}  
-			&.category190{
+			}
+			// Biscuits, PT GF,  PA Buscuits, PA GF  
+			// @everyday: @blue;
+			&.category253, &.category254, &.category3, &.category190{
 				border-style: solid;
 				border-width: 20px 10px;
-				-moz-border-image: url("../img/ruledot-cats.png") 20 10 repeat;
-				-webkit-border-image: url("../img/ruledot-cats.png") 20 10 repeat;
-				-o-border-image: url("../img/ruledot-cats.png") 20 10 repeat;
-				border-image: url("../img/ruledot-cats.png") 20 10  fill repeat;
-        color: @cat-treats;
-				a{ //cats
-					color: @cat-treats;
-					&:hover {text-decoration: none; color: darken(@cat-treats, 25);}
+				-moz-border-image: url("../img/ruledot-blue.png") 20 10 repeat;
+				-webkit-border-image: url("../img/ruledot-blue.png") 20 10 repeat;
+				-o-border-image: url("../img/ruledot-blue.png") 20 10 repeat;
+				border-image: url("../img/ruledot-blue.png") 20 10  fill repeat;
+        		color: @biscuits;
+				a{ 
+					color: @biscuits;
+					&:hover {text-decoration: none; color: darken(@biscuits, 25);}
+				}
+			} 
+			// @functional: @green;
+			// Functional, Nutra, Hemp
+			&.category1, &.category250, &.category251{
+				border-style: solid;
+				border-width: 20px 10px;
+				-moz-border-image: url("../img/ruledot-green.png") 20 10 repeat;
+				-webkit-border-image: url("../img/ruledot-green.png") 20 10 repeat;
+				-o-border-image: url("../img/ruledot-green.png") 20 10 repeat;
+				border-image: url("../img/ruledot-green.png") 20 10  fill repeat;
+        		color: @functional;
+				a{ 
+					color: @functional;
+					&:hover {text-decoration: none; color: darken(@functional, 25);}
+				}
+			} 
+			// @chewy: @brown;
+			// Soft and Chewy, Everyday, Hemp 			
+			&.category239, &.category255, &.category252{
+				border-style: solid;
+				border-width: 20px 10px;
+				-moz-border-image: url("../img/ruledot-brown.png") 20 10 repeat;
+				-webkit-border-image: url("../img/ruledot-brown.png") 20 10 repeat;
+				-o-border-image: url("../img/ruledot-brown.png") 20 10 repeat;
+				border-image: url("../img/ruledot-brown.png") 20 10  fill repeat;
+        		color: @chewy;
+				a{ 
+					color: @chewy;
+					&:hover {text-decoration: none; color: darken(@chewy, 25);}
+				}
+			}
+			// Pure Protein, Dehyrated Treats, Freed Dried
+			// 	@protein: @orange;
+			&.category2, &.category249, &.category238{
+				border-style: solid;
+				border-width: 20px 10px;
+				-moz-border-image: url("../img/ruledot-orange.png") 20 10 repeat;
+				-webkit-border-image: url("../img/ruledot-orange.png") 20 10 repeat;
+				-o-border-image: url("../img/ruledot-orange.png") 20 10 repeat;
+				border-image: url("../img/ruledot-orange.png") 20 10  fill repeat;
+        		color: @protein;
+				a{ 
+					color: @protein;
+					&:hover {text-decoration: none; color: darken(@protein, 25);}
+				}
+			} 
+			// Gifts, travel tins, small boxes, large boxes
+			// @travel:	@yellow; 246, 197,248, 247
+			&.category246, &.category197, &.category248, &.category247{
+				border-style: solid;
+				border-width: 20px 10px;
+				-moz-border-image: url("../img/ruledot-yellow.png") 20 10 repeat;
+				-webkit-border-image: url("../img/ruledot-yellow.png") 20 10 repeat;
+				-o-border-image: url("../img/ruledot-yellow.png") 20 10 repeat;
+				border-image: url("../img/ruledot-yellow.png") 20 10  fill repeat;
+        		color: @travel;
+				a{ 
+					color: @travel;
+					&:hover {text-decoration: none; color: darken(@travel, 25);}
 				}
 			} 
 		}
+		
 		.dispaly-price, .display-price{
 			font-size: 25px;
 			font-family: 'geared_slabbold';
 			margin-top: 0;
-      float: none;
-			
+			  float: none;
+			  
+			&.category246, &.category197, &.category248, &.category247 { color: @travel}
+			&.category2, &.category249, &.category238 { color: @protein;}
+			&.category239, &.category255, &.category252, &.category251-category252{ color: @chewy; }
+			&.category1, &.category250, &.category251 { color: @functional; }
+			&.category253, &.category254, &.category3, &.category190 { color: @everyday; }
+
 			&.category1, &.category145 { color: @nutras;}
 			&.category2, &.category239 { color: @rewards;}
 			&.category3, &.category238 { color: @training;} /* category3 and such */

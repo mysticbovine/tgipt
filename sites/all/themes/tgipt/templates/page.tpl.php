@@ -116,7 +116,7 @@
 						<li><a href="/retailers-carrying-our-treats">Our Retailers</a></li>
 						<li><a href="/our-distributors">Our Distributors</a></li> 
 						<li><a href="/blog">Blog</a></li>
-						<li><a href="tel:+16046893647"><span class="phonenumber">Phone us: 1-604-882-7505</span></a></li>
+						<li><a href="tel:+18888867387"><span class="phonenumber">Phone us: 1-(888)-886-PETS (7387)</span></a></li>
 						
 						<?php 
 							if (user_is_logged_in()){
@@ -172,6 +172,9 @@
 			<div class="row mega">
 				<nav role="navigation" class="mainmenu wsmenu">
 					<ul class="wsmenu-list">
+						<li class="first leaf parent hidden-md hidden-lg">
+							<a href="/retailers-carrying-our-treats" class="navtext">Home</a>
+						</li>
 						<?php print tgipt_megamenu("dog");?>
 						<?php print tgipt_megamenu("cat");?>
 					<?php if (!empty($primary_nav)): ?>
@@ -186,6 +189,64 @@
 					<?php endif; ?>
 					<!-- Mega Menu function test -->
 					<!-- Add account items here. -->
+					<!-- hide on desktop - show on mobile -->					
+						<li class="leaf parent hidden-md hidden-lg">
+							<a href="/retailers-carrying-our-treats" class="navtext">Our Retailers</a>
+						</li>
+						<li class="leaf parent hidden-md hidden-lg">
+							<a href="/our-distributors" class="navtext">Our Distributors</a>
+						</li>
+						
+
+
+						<?php 
+							if (user_is_logged_in()){
+								echo "
+									<li aria-haspopup='true' class='parent hidden-md hidden-lg'>
+										<a href='#' class='navtext'><span></span><span>Your Account</span>
+									</a>
+									<div class='wsshoptabing wtsdepartmentmenu clearfix'>
+										<div class='wsshopwp clearfix'>
+											<ul class='wstabitem clearfix'>
+												<li class='child hidden-md hidden-lg'><a href='/user/logout' class='navtext'>Log out</a></li>  
+												<li class='child hidden-md hidden-lg'><a href='/user' class='navtext'>Edit Profile</a></li>
+											</ul>
+										</div>
+									</div>
+									</li>";
+							} else {
+								echo "
+									<li aria-haspopup='true' class='parent hidden-md hidden-lg'>
+										<a href='#' class='navtext'><span></span><span>Sign In/Sign up</span></a>
+										<div class='wsshoptabing wtsdepartmentmenu clearfix'>
+											<div class='wsshopwp clearfix'>
+												<ul class='wstabitem clearfix'>
+													<li class='child hidden-md hidden-lg'><a href='/user' class='navtext'>Log in </a></li>  
+													<li class='child hidden-md hidden-lg'><a href='/user/register' class='navtext'>Sign up</a></li>
+												</ul>
+											</div>
+										</div>
+									</li>";	
+						}?>
+						
+						<li class="leaf parent hidden-md hidden-lg">
+						<a href="/cart" class="navtext">Cart: 
+							<?php 
+							// Set up as a function?
+								if(!isset($cid)) {$cid = NULL;}
+								$item = uc_cart_get_total_qty($cid);
+								if($item == 0) {
+									echo " 0 items";
+								} else {										
+									if ($item == 1) {												
+										echo " $item item";
+									} else {
+										echo "$item items";
+									} 
+								} 
+							?>
+						</a>
+					</li>
 					</ul>
 				</nav>
 			</div> <!-- end mega row-->

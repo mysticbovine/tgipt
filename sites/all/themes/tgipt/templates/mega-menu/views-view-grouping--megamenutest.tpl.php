@@ -21,8 +21,13 @@
  */
 ?>
 <?php if($grouping_level == 0){ ?>
+    <?php 
+      $remove = array(" ","&amp;");
+      $replace = array("_","");
+      $child = str_replace($remove,$replace, $title); $child = strip_tags($child);?>
+
     <?php print $title; ?>
-    <div class="wsshoptabing wtsdepartmentmenu clearfix">
+    <div class="wsshoptabing wtsdepartmentmenu clearfix <?php print $child; ?> ZERO">
         <div class="wsshopwp clearfix">
             <ul class="wstabitem clearfix">
                 
@@ -33,8 +38,12 @@
     </li> 
 <?php } ?>
 <?php if($grouping_level == 1){ ?>
+    <?php 
+      $remove = array(" ","&amp;");
+      $replace = array("_","");
+      $child = str_replace($remove,$replace, $title); $child = strip_tags($child);?>
     <?php print $title; ?>
-    <div class="wstitemright clearfix wstitemrightactive">
+    <div class="wstitemright clearfix wstitemrightactive <?php print $child; ?> ONE">
         <div class="container-fluid">
             <div class="row">
                 <?php print $content; ?>

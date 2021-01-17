@@ -24,7 +24,9 @@
     <?php 
       $remove = array(" ","&amp;");
       $replace = array("_","");
-      $child = str_replace($remove,$replace, $title); $child = strip_tags($child);?>
+      $child = str_replace($remove,$replace, $title); $child = strip_tags($child);
+      $child = preg_replace(' ', '', $child);
+      $child = trim($child);?>
 
     <?php print $title; ?>
     <div class="wsshoptabing wtsdepartmentmenu clearfix <?php print $child; ?> ZERO">
@@ -32,8 +34,10 @@
             <ul class="wstabitem clearfix">
                 
                 <?php print $content; ?>
+                
             </ul>
         </div>
+
     </div>
     </li> 
 <?php } ?>
@@ -41,13 +45,17 @@
     <?php 
       $remove = array(" ","&amp;");
       $replace = array("_","");
-      $child = str_replace($remove,$replace, $title); $child = strip_tags($child);?>
+      $child = str_replace($remove,$replace, $title); $child = strip_tags($child);
+      $child = trim($child);?>
     <?php print $title; ?>
     <div class="wstitemright clearfix wstitemrightactive <?php print $child; ?> ONE">
         <div class="container-fluid">
             <div class="row">
                 <?php print $content; ?>
+               <!-- -->
+               
             </div>
+            <div class="here"></div>
         </div>
     </div>
     </li>

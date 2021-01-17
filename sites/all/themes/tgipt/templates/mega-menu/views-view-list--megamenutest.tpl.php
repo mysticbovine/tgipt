@@ -14,7 +14,10 @@
 <?php 
       $remove = array(" ","&amp;");
       $replace = array("_","");
-      $grandchild = str_replace($remove,$replace, $title); $grandchild = strip_tags($grandchild);?>
+      $grandchild = str_replace($remove,$replace, $title); 
+      $grandchild = strip_tags($grandchild);
+      $grandchild = trim($grandchild);
+      ?>
 <!--<?php print $child; ?>-->
  <div class="col-md-4 clearfix <?php print $grandchild; ?>">
 <?php print $wrapper_prefix; ?>
@@ -29,6 +32,5 @@
           <?php print $row; ?>
         <?php endforeach; ?>
       </ul>
- 
 <?php print $wrapper_suffix; ?>
 </div>

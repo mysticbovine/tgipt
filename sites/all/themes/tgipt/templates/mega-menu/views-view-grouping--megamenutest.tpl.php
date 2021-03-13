@@ -52,10 +52,17 @@
         <div class="container-fluid">
             <div class="row">
                 <?php print $content; ?>
-               <!-- -->
+               <!-- 
+            
+    
+
+
+               -->
                
             </div>
-            <div class="here"></div>
+            <div id="<?php print $child; ?>" class="here ">
+
+            </div>
         </div>
     </div>
     </li>

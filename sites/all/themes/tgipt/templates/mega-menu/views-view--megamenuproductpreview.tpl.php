@@ -47,23 +47,32 @@ jQuery(document).ready(function($) {
     //$("li.child div").click(function() { // This gets the GrandChild
     // $("li.child.wsshoplink-active div").click(function() {  //Gets the Child
       var myClass, oldClass;
-      console.log("myClass start.");
-        console.log(myClass);
+      console.log("myClass start. 50");
+        console.log(myClass); //<- undefined.
         
       if(typeof myClass == 'undefined'){
         // get my the prview and set as myClass
-        console.log("myClass empty");
-        console.log(myClass);
+        console.log("myClass empty. 55");
+        console.log(myClass); //<-- undefined
 
         myClass = $(this).attr("class");
+        // Traverse up one div level : <div id="Functional" class="here">
+        // get the ID assign to a variable.  Use that to target.
         oldClass = myClass;
         
         console.log("myClass full 1");
         console.log(myClass);
         console.log(oldClass);
-
-        $(".row."+myClass+".product-preview").clone().insertAfter(".here");
-
+        
+        // TODO:  How can I insert this in .here?
+        //        Move line 73 to 66
+        //        Add the ID to the remove - so it doesn't remove all the clicked items on the other tabs.
+        $(".here").remove(".row."+oldClass+".product-preview");
+        // var clone = $(".row."+myClass+".product-preview").clone().insertAfter(".here");
+        var clone = $(".row."+myClass+".product-preview").clone();
+        console.log("clone: ");
+        console.log(clone);
+        $( ".here" ).append( clone );
       } else {
         console.log("myClass full 2");
         console.log(myClass);
@@ -93,8 +102,12 @@ jQuery(document).ready(function($) {
     });
   //  TO DO
   // If others are clicked then the it gets added.
-  // Clicked ones stay visible on other tabs.
-  // Menu area needs to expand.
+  // Clicked ones stay visible only on the tab where they are clicked.
+  //      - add an ID to the container of the menu: sites/all/themes/tgipt/templates/mega-menu/views-view-field--megamenutest--name.tpl.php
+  //      - IE: #functionDog
+  //      - Add that to the product preivew div: sites/all/themes/tgipt/templates/mega-menu/views-view-grouping--megamenutest.tpl.php
+  //      - 
+  // DONE: Menu area needs to expand.
 
   $(document).on("click",".appDetails", function () {
    var clickedBtnID = $(this).attr('id'); // or var clickedBtnID = this.id

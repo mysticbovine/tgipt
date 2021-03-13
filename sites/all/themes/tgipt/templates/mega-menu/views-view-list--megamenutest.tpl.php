@@ -17,19 +17,32 @@
       $grandchild = str_replace($remove,$replace, $title); 
       $grandchild = strip_tags($grandchild);
       $grandchild = trim($grandchild);
+
+      $productCount = count($rows);
+      if ($productCount >= 10){
+        $class= "col-md-8";
+        $productLayout = "column-count:2";
+      } else {
+        $class = "col-md-4";
+        $productLayout = "column-count:1";
+      }
       ?>
 <!--<?php print $child; ?>-->
- <div class="col-md-4 clearfix <?php print $grandchild; ?>">
+
+ <div class="<?php print $class; ?> clearfix <?php print $grandchild; ?> ">
 <?php print $wrapper_prefix; ?>
   <?php if (!empty($title)) : ?>
 
     <?php print $title; ?>
   <?php endif; ?>
-   
-      <ul class="wstliststy02 clearfix">
+
+      <ul class="wstliststy02 clearfix" style="<?php print $productLayout; ?>" >
         <?php foreach ($rows as $id => $row): ?>
+        
         <?php /* PRODUCTS */?>
+ 
           <?php print $row; ?>
+
         <?php endforeach; ?>
       </ul>
 <?php print $wrapper_suffix; ?>
